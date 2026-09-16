@@ -1,7 +1,7 @@
 "use client";
 
 import Breadcrumb from "@/components/ui/breadcrumb";
-import TableToolbar from "@/components/ui/table-toolbar";
+import TableToolbar from "@/components/ui/toolbar";
 import { RoleTable } from "@/features/iam/components/role-table";
 
 export default function RolePage() {

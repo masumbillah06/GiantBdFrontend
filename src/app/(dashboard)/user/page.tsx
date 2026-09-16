@@ -1,7 +1,7 @@
 "use client";
 
 import Breadcrumb from "@/components/ui/breadcrumb";
-import TableToolbar from "@/components/ui/table-toolbar";
+import TableToolbar from "@/components/ui/toolbar";
 import { UserTable } from "@/features/iam/components/user-table";
 
 export default function UserPage() {

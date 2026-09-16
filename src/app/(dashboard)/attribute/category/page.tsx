@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import Breadcrumb from "@/components/ui/breadcrumb";
-import TableToolbar from "@/components/ui/table-toolbar";
+import TableToolbar from "@/components/ui/toolbar";
 import PaginatedTable from "@/components/ui/table/paginated-table";
 import { ActionButtonGroup } from "@/components/ui/buttons/action-button-group";
 import { ActionButton } from "@/components/ui/buttons/action-button";

@@ -1,7 +1,7 @@
 "use client";
 
 import Breadcrumb from "@/components/ui/breadcrumb";
-import TableToolbar from "@/components/ui/table-toolbar";
+import TableToolbar from "@/components/ui/toolbar";
 import { PermissionTable } from "@/features/iam/components/permission-table";
 
 export default function PermissionPage() {

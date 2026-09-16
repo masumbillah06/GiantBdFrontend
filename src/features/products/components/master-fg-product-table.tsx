@@ -40,10 +40,11 @@ export const masterProductColumns: ColumnDef<MasterProduct>[] = [
 export interface MasterFGProductTableProps {
   pageSize?: number;
   searchValue?: string;
+  filters?: Record<string, string | number>;
   onNotify?: (msg: string) => void;
 }
 
-export function MasterFGProductTable({ pageSize, searchValue, onNotify }: MasterFGProductTableProps) {
+export function MasterFGProductTable({ pageSize, searchValue, filters, onNotify }: MasterFGProductTableProps) {
   const { data = [], isLoading, error, refetch } = useMasterProducts();
 
   return (
@@ -52,6 +53,7 @@ export function MasterFGProductTable({ pageSize, searchValue, onNotify }: Master
       columns={masterProductColumns}
       pageSize={pageSize}
       searchValue={searchValue}
+      filters={filters}
       minWidth="1200px"
       actionsLabel="Action"
       isLoading={isLoading}

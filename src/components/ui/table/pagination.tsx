@@ -31,8 +31,6 @@ export default function Pagination({
   totalPages,
   onPageChange,
   disabled = false,
-  totalItems,
-  pageSize = 10,
   className,
 }: PaginationProps) {
   const [goToValue, setGoToValue] = useState<string>("");
@@ -94,27 +92,13 @@ export default function Pagination({
 
   const pages = buildPages();
 
-  const startItem = totalItems !== undefined && totalItems > 0 ? (currentPage - 1) * pageSize + 1 : 0;
-  const endItem = totalItems !== undefined ? Math.min(currentPage * pageSize, totalItems) : 0;
-
   return (
     <div
       className={cn(
         "w-full flex flex-wrap items-center justify-center gap-3 rounded-xl bg-white px-4 py-3 shadow-sm",
-        totalItems !== undefined && "justify-between",
         className
       )}
     >
-      {/* Optional Results Summary */}
-      {totalItems !== undefined && (
-        <div className="text-xs text-slate-500 whitespace-nowrap">
-          Showing{" "}
-          <span className="font-semibold text-slate-700">{startItem}</span> to{" "}
-          <span className="font-semibold text-slate-700">{endItem}</span> of{" "}
-          <span className="font-semibold text-slate-700">{totalItems}</span> records
-        </div>
-      )}
-
       {/* Pagination Controls */}
       <div className="flex flex-wrap items-center justify-center gap-1">
         {/* Previous */}

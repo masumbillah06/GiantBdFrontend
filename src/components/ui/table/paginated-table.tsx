@@ -64,6 +64,10 @@ export interface PaginatedTableProps<
 
   // Direct search override
   searchValue?: string;
+
+  // Direct filters override
+  filters?: Record<string, string | number>;
+  onFilterChange?: (filters: Record<string, string | number>) => void;
 }
 
 const EMPTY_DATA: never[] = [];
@@ -87,7 +91,7 @@ export function PaginatedTable<
   totalPages: controlledTotalPages,
   totalItems: controlledTotalItems,
   onPageChange: parentOnPageChange,
-  onPageSizeChange,
+  onPageSizeChange: _onPageSizeChange,
   isLoading = false,
   loadingRowCount = 5,
   error = null,
@@ -107,6 +111,8 @@ export function PaginatedTable<
   noticeDuration = 3500,
   className = "space-y-4",
   searchValue: propSearchValue,
+  filters: propFilters,
+  onFilterChange,
 }: PaginatedTableProps<T, TId>) {
   const tableContext = useTableContext<T>();
   const tableRef = useRef<HTMLDivElement>(null);
@@ -123,35 +129,81 @@ export function PaginatedTable<
       ? propSearchValue
       : tableContext?.searchQuery ?? "";
 
+  // Synchronize filters with context or prop
+  const activeFilters = useMemo(() => {
+    return propFilters ?? tableContext?.filters ?? {};
+  }, [propFilters, tableContext?.filters]);
+
   // Infer mode: if server-specific props are provided, use "server" unless explicitly set to "client"
   const isServerMode =
     explicitMode === "server" ||
     (explicitMode === undefined &&
       (controlledTotalPages !== undefined || parentOnPageChange !== undefined));
 
-  // Client-side search filtering if in client mode and search query is provided
+  // Client-side search and filter processing if in client mode
   const processedData = useMemo(() => {
-    if (isServerMode || !activeSearchQuery.trim()) {
+    if (isServerMode) {
       return data;
     }
-    const query = activeSearchQuery.toLowerCase();
-    return data.filter((row) => {
-      // 1. Search across all defined columns
-      for (const col of columns) {
+
+    let result = data;
+
+    // 1. Apply active field filters
+    const activeFilterEntries = Object.entries(activeFilters).filter(
+      ([, val]) => val !== undefined && val !== null && String(val).trim() !== ""
+    );
+
+    if (activeFilterEntries.length > 0) {
+      result = result.filter((row) => {
         const rowRecord = row as Record<string, unknown>;
-        const cellVal = rowRecord[col.key as string];
-        if (cellVal !== undefined && cellVal !== null) {
-          if (String(cellVal).toLowerCase().includes(query)) {
-            return true;
+        return activeFilterEntries.every(([filterKey, filterVal]) => {
+          const targetVal = String(filterVal).toLowerCase().trim();
+
+          // Support field name aliases (e.g. master vs masterProduct vs masterProductName)
+          let cellVal: unknown = rowRecord[filterKey];
+          if (cellVal === undefined) {
+            if (filterKey === "master" || filterKey === "masterProduct") {
+              cellVal =
+                rowRecord.masterProduct ??
+                rowRecord.masterProductName ??
+                rowRecord.master ??
+                rowRecord.productName;
+            }
+          }
+
+          if (cellVal === undefined || cellVal === null) {
+            return false;
+          }
+
+          const cellString = String(cellVal).toLowerCase().trim();
+          return cellString === targetVal;
+        });
+      });
+    }
+
+    // 2. Search query filtering
+    if (activeSearchQuery.trim()) {
+      const query = activeSearchQuery.toLowerCase().trim();
+      result = result.filter((row) => {
+        // Search across all defined columns
+        for (const col of columns) {
+          const rowRecord = row as Record<string, unknown>;
+          const cellVal = rowRecord[col.key as string];
+          if (cellVal !== undefined && cellVal !== null) {
+            if (String(cellVal).toLowerCase().includes(query)) {
+              return true;
+            }
           }
         }
-      }
-      // 2. Search across all object properties as fallback
-      return Object.values(row).some((val) =>
-        String(val ?? "").toLowerCase().includes(query)
-      );
-    });
-  }, [data, columns, activeSearchQuery, isServerMode]);
+        // Search across all object properties as fallback
+        return Object.values(row).some((val) =>
+          String(val ?? "").toLowerCase().includes(query)
+        );
+      });
+    }
+
+    return result;
+  }, [data, columns, activeSearchQuery, activeFilters, isServerMode]);
 
   // --- Client-Side Pagination Hook (used when in client mode) ---
   const clientPagination = useClientPagination<T, TId>({
@@ -160,6 +212,13 @@ export function PaginatedTable<
     initialPage,
     noticeDuration,
   });
+
+  // Reset to page 1 whenever active filters or search change
+  const { setCurrentPage } = clientPagination;
+  useEffect(() => {
+    setCurrentPage(1);
+    onFilterChange?.(activeFilters);
+  }, [activeSearchQuery, activeFilters, setCurrentPage, onFilterChange]);
 
   // --- Server-Side Standalone State (used when in server mode) ---
   const [serverSelectedIds, setServerSelectedIds] = useState<Array<TId>>([]);
@@ -232,6 +291,7 @@ export function PaginatedTable<
     if (tableContext?.registerTable) {
       tableContext.registerTable({
         data: processedData,
+        rawData: data,
         columns,
         selectedIds: effectiveSelectedIds as Array<string | number>,
         isLoading,
@@ -243,6 +303,7 @@ export function PaginatedTable<
   }, [
     tableContext,
     processedData,
+    data,
     columns,
     effectiveSelectedIds,
     isLoading,
@@ -291,13 +352,17 @@ export function PaginatedTable<
           idLabel={idLabel}
           minWidth={minWidth}
           emptyState={
-            activeSearchQuery && processedData.length === 0 ? (
-              <div className="py-6 text-center text-slate-500">
-                <p className="text-sm font-medium">
-                  No records matching &ldquo;{activeSearchQuery}&rdquo;
+            processedData.length === 0 &&
+            (Boolean(activeSearchQuery.trim()) ||
+              Object.values(activeFilters).some(
+                (v) => v !== undefined && v !== null && String(v).trim() !== ""
+              )) ? (
+              <div className="py-8 text-center text-slate-500">
+                <p className="text-sm font-medium text-slate-700">
+                  No records match the current filters
                 </p>
                 <p className="mt-1 text-xs text-slate-400">
-                  Try adjusting your search query or clear the filter.
+                  Try adjusting your search query or reset the filters.
                 </p>
               </div>
             ) : (

@@ -14,6 +14,7 @@ import { printTableData } from "./table-print";
 
 export interface RegisteredTableMeta<T extends RowBase = RowBase> {
   data?: T[];
+  rawData?: T[];
   columns?: ColumnDef<T>[];
   selectedIds?: Array<string | number>;
   isLoading?: boolean;
@@ -27,6 +28,12 @@ export interface TableContextValue<T extends RowBase = RowBase> {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   searchPlaceholder?: string;
+
+  // Filters
+  filters: Record<string, string | number>;
+  setFilter: (key: string, value: string | number) => void;
+  setFilters: (filters: Record<string, string | number>) => void;
+  resetFilters: () => void;
 
   // Pagination
   pageSize: number;
@@ -53,7 +60,9 @@ export interface TableContextValue<T extends RowBase = RowBase> {
   newHref?: string;
 
   // Table Registration
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
   registeredTable: RegisteredTableMeta<any> | null;
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
   registerTable: (meta: RegisteredTableMeta<any>) => void;
   unregisterTable: () => void;
 
@@ -84,6 +93,8 @@ export interface TableProviderProps<T extends RowBase = RowBase> {
   columns?: ColumnDef<T>[];
   getRowId?: (row: T) => string | number;
   isLoading?: boolean;
+  initialFilters?: Record<string, string | number>;
+  onFilterChange?: (filters: Record<string, string | number>) => void;
   onSearchChange?: (query: string) => void;
   onPageSizeChange?: (size: number) => void;
 }
@@ -107,12 +118,17 @@ export function TableProvider<T extends RowBase = RowBase>({
   columns: propColumns,
   getRowId: propGetRowId,
   isLoading: propIsLoading,
+  initialFilters,
+  onFilterChange,
   onSearchChange,
   onPageSizeChange,
 }: TableProviderProps<T>) {
   const [searchQuery, setSearchQueryState] = useState(initialSearchQuery);
   const [pageSize, setPageSizeState] = useState(initialPageSize);
   const [currentPage, setCurrentPage] = useState(1);
+  const [filters, setFiltersState] = useState<Record<string, string | number>>(
+    initialFilters ?? {}
+  );
   const [isReloading, setIsReloading] = useState(false);
   const [registeredTable, setRegisteredTable] =
     useState<RegisteredTableMeta<T> | null>(null);
@@ -148,6 +164,38 @@ export function TableProvider<T extends RowBase = RowBase>({
     [onSearchChange]
   );
 
+  const setFilter = useCallback(
+    (key: string, value: string | number) => {
+      setFiltersState((prev) => {
+        const next = { ...prev };
+        if (value === "" || value === undefined || value === null) {
+          delete next[key];
+        } else {
+          next[key] = value;
+        }
+        onFilterChange?.(next);
+        return next;
+      });
+      setCurrentPage(1);
+    },
+    [onFilterChange]
+  );
+
+  const setFilters = useCallback(
+    (newFilters: Record<string, string | number>) => {
+      setFiltersState(newFilters);
+      setCurrentPage(1);
+      onFilterChange?.(newFilters);
+    },
+    [onFilterChange]
+  );
+
+  const resetFilters = useCallback(() => {
+    setFiltersState({});
+    setCurrentPage(1);
+    onFilterChange?.({});
+  }, [onFilterChange]);
+
   const setPageSize = useCallback(
     (size: number) => {
       setPageSizeState(size);
@@ -161,6 +209,7 @@ export function TableProvider<T extends RowBase = RowBase>({
     setRegisteredTable((current) => {
       if (
         current?.data === meta.data &&
+        current?.rawData === meta.rawData &&
         current?.columns === meta.columns &&
         current?.selectedIds === meta.selectedIds &&
         current?.isLoading === meta.isLoading &&
@@ -270,6 +319,10 @@ export function TableProvider<T extends RowBase = RowBase>({
       searchQuery,
       setSearchQuery,
       searchPlaceholder,
+      filters,
+      setFilter,
+      setFilters,
+      resetFilters,
       pageSize,
       setPageSize,
       pageSizeOptions,
@@ -287,6 +340,7 @@ export function TableProvider<T extends RowBase = RowBase>({
       newButtonLabel,
       newHref,
       registeredTable,
+      /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
       registerTable: registerTable as (meta: RegisteredTableMeta<any>) => void,
       unregisterTable,
       actionNotice,
@@ -297,6 +351,10 @@ export function TableProvider<T extends RowBase = RowBase>({
       searchQuery,
       setSearchQuery,
       searchPlaceholder,
+      filters,
+      setFilter,
+      setFilters,
+      resetFilters,
       pageSize,
       setPageSize,
       pageSizeOptions,

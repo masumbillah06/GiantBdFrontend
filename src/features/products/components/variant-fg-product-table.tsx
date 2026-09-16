@@ -38,10 +38,11 @@ export const variantProductColumns: ColumnDef<VariantProduct>[] = [
 export interface VariantFGProductTableProps {
   pageSize?: number;
   searchValue?: string;
+  filters?: Record<string, string | number>;
   onNotify?: (msg: string) => void;
 }
 
-export function VariantFGProductTable({ pageSize, searchValue, onNotify }: VariantFGProductTableProps) {
+export function VariantFGProductTable({ pageSize, searchValue, filters, onNotify }: VariantFGProductTableProps) {
   const { data = [], isLoading, error, refetch } = useVariantProducts();
 
   return (
@@ -50,6 +51,7 @@ export function VariantFGProductTable({ pageSize, searchValue, onNotify }: Varia
       columns={variantProductColumns}
       pageSize={pageSize}
       searchValue={searchValue}
+      filters={filters}
       minWidth="1200px"
       actionsLabel="Action"
       isLoading={isLoading}

@@ -31,15 +31,12 @@ export function TableToolbarSearch({
     propPlaceholder ?? context?.searchPlaceholder ?? "Search records...";
 
   const [localSearch, setLocalSearch] = useState(activeValue);
-  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  /*
-   * Keep local input synchronized when the parent or context
-   * changes the search value externally.
-   */
-  useEffect(() => {
+  const [prevActiveValue, setPrevActiveValue] = useState(activeValue);
+  if (prevActiveValue !== activeValue) {
+    setPrevActiveValue(activeValue);
     setLocalSearch(activeValue);
-  }, [activeValue]);
+  }
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   /*
    * Cleanup debounce timer when component unmounts.

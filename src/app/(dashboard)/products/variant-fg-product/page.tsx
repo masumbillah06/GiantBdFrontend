@@ -12,8 +12,47 @@ import {
   TableToolbarReload,
   TableToolbarSearch,
 } from "@/components/ui/table";
-import FilterCard from "@/components/ui/filter-card";
+import FilterCard, { type FilterCardField } from "@/components/ui/filter-card";
 import { VariantFGProductTable } from "@/features/products/components/variant-fg-product-table";
+
+const VARIANT_PRODUCT_FILTER_FIELDS: FilterCardField[] = [
+  {
+    key: "masterProduct",
+    label: "Master",
+    placeholder: "Filter by master...",
+    width: "w-48",
+  },
+  {
+    key: "material",
+    label: "Material",
+    placeholder: "Filter by material...",
+    width: "w-44",
+  },
+  {
+    key: "size",
+    label: "Size",
+    placeholder: "Filter by size...",
+    width: "w-32",
+  },
+  {
+    key: "color",
+    label: "Color",
+    placeholder: "Filter by color...",
+    width: "w-36",
+  },
+  {
+    key: "gender",
+    label: "Gender",
+    placeholder: "Filter by gender...",
+    width: "w-36",
+  },
+  {
+    key: "status",
+    label: "Status",
+    placeholder: "Filter by status...",
+    width: "w-36",
+  },
+];
 
 export default function VariantFGProductPage() {
   return (
@@ -45,7 +84,7 @@ export default function VariantFGProductPage() {
 
       {/* ── Filter Card ── */}
       <div className="mt-4">
-        <FilterCard />
+        <FilterCard fields={VARIANT_PRODUCT_FILTER_FIELDS} />
       </div>
 
       {/* ── Variant Product Table ── */}

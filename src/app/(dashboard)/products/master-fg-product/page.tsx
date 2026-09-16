@@ -12,8 +12,23 @@ import {
   TableToolbarReload,
   TableToolbarSearch,
 } from "@/components/ui/table";
-import FilterCard from "@/components/ui/filter-card";
+import FilterCard, { type FilterCardField } from "@/components/ui/filter-card";
 import { MasterFGProductTable } from "@/features/products/components/master-fg-product-table";
+
+const MASTER_PRODUCT_FILTER_FIELDS: FilterCardField[] = [
+  {
+    key: "material",
+    label: "Material",
+    placeholder: "Filter by material...",
+    width: "w-56",
+  },
+  {
+    key: "category",
+    label: "Category",
+    placeholder: "Filter by category...",
+    width: "w-52",
+  },
+];
 
 export default function MasterFGProductPage() {
   return (
@@ -45,7 +60,7 @@ export default function MasterFGProductPage() {
 
       {/* ── Filter Card ── */}
       <div className="mt-4">
-        <FilterCard />
+        <FilterCard fields={MASTER_PRODUCT_FILTER_FIELDS} />
       </div>
 
       {/* ── Master Product Table ── */}

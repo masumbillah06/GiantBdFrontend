@@ -1,6 +1,6 @@
 import type { WarehouseRecord } from '@/features/attributes/types/attribute.types';
 export type { WarehouseRecord };
-import type { ColumnDef } from '@/components/ui/tables/ReusableTable.types';
+import type { ColumnDef } from '@/components/ui/ReusableTable.types';
 
 export const warehouseData: WarehouseRecord[] = [
   {

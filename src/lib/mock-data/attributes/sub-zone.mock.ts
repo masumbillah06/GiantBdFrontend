@@ -1,6 +1,6 @@
 import type { SubZoneRecord } from '@/features/attributes/types/attribute.types';
 export type { SubZoneRecord };
-import type { ColumnDef } from '@/components/ui/tables/ReusableTable.types';
+import type { ColumnDef } from '@/components/ui/ReusableTable.types';
 
 export const subZoneData: SubZoneRecord[] = [
   {

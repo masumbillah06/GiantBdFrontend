@@ -4,7 +4,7 @@
 
 import React, { type ReactNode } from "react";
 import { ClipboardList, Package, Truck, Printer } from "lucide-react";
-import type { ColumnDef } from "@/components/ui/tables/ReusableTable.types";
+import type { ColumnDef } from "@/components/ui/ReusableTable.types";
 import { ActionButton } from "@/components/ui/buttons/action-button";
 import { ActionButtonGroup } from "@/components/ui/buttons/action-button-group";
 import type { StockInRow, RequisitionRow } from "@/features/dashboard/types/dashboard.types";

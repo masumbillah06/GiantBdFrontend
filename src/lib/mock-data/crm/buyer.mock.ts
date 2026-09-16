@@ -1,5 +1,5 @@
 import type { CustomerRecord } from '@/features/crm/types/crm.types';
-import type { ColumnDef } from '@/components/ui/tables/ReusableTable.types';
+import type { ColumnDef } from '@/components/ui/ReusableTable.types';
 
 export const customerData: CustomerRecord[] = [
   {

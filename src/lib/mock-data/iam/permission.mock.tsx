@@ -5,7 +5,7 @@
 
 import React from 'react';
 import type { PermissionRecord } from '@/features/iam/types/iam.types';
-import type { ColumnDef } from '@/components/ui/tables/ReusableTable.types';
+import type { ColumnDef } from '@/components/ui/ReusableTable.types';
 
 const renderCheckOrDash = (active: boolean) => (
   <div className="flex items-center justify-center">

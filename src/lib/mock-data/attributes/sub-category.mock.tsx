@@ -1,7 +1,7 @@
 import React from 'react';
 import type { SubCategoryRecord } from '@/features/attributes/types/attribute.types';
 export type { SubCategoryRecord };
-import type { ColumnDef } from '@/components/ui/tables/ReusableTable.types';
+import type { ColumnDef } from '@/components/ui/ReusableTable.types';
 
 export const subCategoryData: SubCategoryRecord[] = [
   {

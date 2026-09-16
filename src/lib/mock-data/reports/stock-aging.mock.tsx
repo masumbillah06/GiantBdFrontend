@@ -3,7 +3,7 @@
 // Classifies finished goods inventory into Green (0-30d), Yellow (31-90d), and Red (90+d)
 // ---------------------------------------------------------------------------
 
-import type { ColumnDef } from "@/components/ui/tables/ReusableTable.types";
+import type { ColumnDef } from "@/components/ui/ReusableTable.types";
 
 export type AgingTier = "green" | "yellow" | "red";
 

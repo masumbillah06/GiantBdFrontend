@@ -4,7 +4,7 @@
 // ---------------------------------------------------------------------------
 
 import type { BatchItem } from '@/features/inventory/types/inventory.types';
-import type { ColumnDef } from '@/components/ui/tables/ReusableTable.types';
+import type { ColumnDef } from '@/components/ui/ReusableTable.types';
 
 export const batchColumns: ColumnDef<BatchItem>[] = [
   {

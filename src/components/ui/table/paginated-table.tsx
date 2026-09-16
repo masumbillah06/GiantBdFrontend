@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useRef, useEffect } from "react";
+import React, { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import ReusableTable from "./ReusableTable";
 import type {
   ColumnDef,
@@ -11,6 +11,7 @@ import type {
 } from "./ReusableTable.types";
 import Pagination from "@/components/ui/table/pagination";
 import { useClientPagination } from "@/hooks/use-client-pagination";
+import { useTableContext } from "./table-context";
 
 export interface PaginatedTableProps<
   T extends RowBase,
@@ -60,6 +61,9 @@ export interface PaginatedTableProps<
   onSelectionChange?: (selectedIds: Array<TId>) => void;
   noticeDuration?: number;
   className?: string;
+
+  // Direct search override
+  searchValue?: string;
 }
 
 const EMPTY_DATA: never[] = [];
@@ -67,6 +71,7 @@ const EMPTY_DATA: never[] = [];
 /**
  * Universal data table supporting both client-side mock datasets
  * and real-world asynchronous server-side API pagination.
+ * Automatically synchronizes with TableProvider when present.
  */
 export function PaginatedTable<
   T extends RowBase,
@@ -76,12 +81,13 @@ export function PaginatedTable<
   columns,
   getRowId,
   mode: explicitMode,
-  pageSize = 10,
+  pageSize: propPageSize,
   initialPage = 1,
   currentPage: controlledCurrentPage,
   totalPages: controlledTotalPages,
-  totalItems,
+  totalItems: controlledTotalItems,
   onPageChange: parentOnPageChange,
+  onPageSizeChange,
   isLoading = false,
   loadingRowCount = 5,
   error = null,
@@ -100,17 +106,57 @@ export function PaginatedTable<
   onSelectionChange,
   noticeDuration = 3500,
   className = "space-y-4",
+  searchValue: propSearchValue,
 }: PaginatedTableProps<T, TId>) {
+  const tableContext = useTableContext<T>();
+  const tableRef = useRef<HTMLDivElement>(null);
+
+  // Synchronize page size with context if not explicitly overridden by prop
+  const effectivePageSize =
+    propPageSize !== undefined
+      ? propPageSize
+      : tableContext?.pageSize ?? 10;
+
+  // Synchronize search query with context or prop
+  const activeSearchQuery =
+    propSearchValue !== undefined
+      ? propSearchValue
+      : tableContext?.searchQuery ?? "";
+
   // Infer mode: if server-specific props are provided, use "server" unless explicitly set to "client"
   const isServerMode =
     explicitMode === "server" ||
     (explicitMode === undefined &&
       (controlledTotalPages !== undefined || parentOnPageChange !== undefined));
 
+  // Client-side search filtering if in client mode and search query is provided
+  const processedData = useMemo(() => {
+    if (isServerMode || !activeSearchQuery.trim()) {
+      return data;
+    }
+    const query = activeSearchQuery.toLowerCase();
+    return data.filter((row) => {
+      // 1. Search across all defined columns
+      for (const col of columns) {
+        const rowRecord = row as Record<string, unknown>;
+        const cellVal = rowRecord[col.key as string];
+        if (cellVal !== undefined && cellVal !== null) {
+          if (String(cellVal).toLowerCase().includes(query)) {
+            return true;
+          }
+        }
+      }
+      // 2. Search across all object properties as fallback
+      return Object.values(row).some((val) =>
+        String(val ?? "").toLowerCase().includes(query)
+      );
+    });
+  }, [data, columns, activeSearchQuery, isServerMode]);
+
   // --- Client-Side Pagination Hook (used when in client mode) ---
   const clientPagination = useClientPagination<T, TId>({
-    data,
-    pageSize,
+    data: processedData,
+    pageSize: effectivePageSize,
     initialPage,
     noticeDuration,
   });
@@ -154,6 +200,9 @@ export function PaginatedTable<
   const effectiveTotalPages = isServerMode
     ? (controlledTotalPages ?? 1)
     : clientPagination.totalPages;
+  const effectiveTotalItems = isServerMode
+    ? controlledTotalItems
+    : processedData.length;
 
   const effectiveSelectedIds = isServerMode
     ? (controlledSelectedIds ?? serverSelectedIds)
@@ -178,12 +227,41 @@ export function PaginatedTable<
     }
   };
 
-  const activeNotice = isServerMode ? serverNotice : clientPagination.actionNotice;
-  const activeClearNotice = isServerMode ? clearServerNotice : clientPagination.clearNotice;
-  const activeNotify = isServerMode ? serverNotify : clientPagination.notify;
+  // Register table state with TableProvider if present
+  useEffect(() => {
+    if (tableContext?.registerTable) {
+      tableContext.registerTable({
+        data: processedData,
+        columns,
+        selectedIds: effectiveSelectedIds as Array<string | number>,
+        isLoading,
+        onRetry,
+        getRowId: getRowId as ((row: T) => string | number) | undefined,
+        tableRef,
+      });
+    }
+  }, [
+    tableContext,
+    processedData,
+    columns,
+    effectiveSelectedIds,
+    isLoading,
+    onRetry,
+    getRowId,
+  ]);
+
+  const activeNotice =
+    tableContext?.actionNotice ??
+    (isServerMode ? serverNotice : clientPagination.actionNotice);
+  const activeClearNotice =
+    tableContext?.clearNotice ??
+    (isServerMode ? clearServerNotice : clientPagination.clearNotice);
+  const activeNotify =
+    tableContext?.notify ??
+    (isServerMode ? serverNotify : clientPagination.notify);
 
   return (
-    <div className={className}>
+    <div ref={tableRef} className={className}>
       {/* Toast Feedback Notice */}
       {activeNotice && (
         <div className="rounded-lg bg-blue-50 border border-blue-200 px-4 py-2.5 text-xs sm:text-sm text-blue-800 flex items-center justify-between transition-all">
@@ -212,7 +290,20 @@ export function PaginatedTable<
           showId={showId}
           idLabel={idLabel}
           minWidth={minWidth}
-          emptyState={emptyState}
+          emptyState={
+            activeSearchQuery && processedData.length === 0 ? (
+              <div className="py-6 text-center text-slate-500">
+                <p className="text-sm font-medium">
+                  No records matching &ldquo;{activeSearchQuery}&rdquo;
+                </p>
+                <p className="mt-1 text-xs text-slate-400">
+                  Try adjusting your search query or clear the filter.
+                </p>
+              </div>
+            ) : (
+              emptyState
+            )
+          }
           isLoading={isLoading}
           loadingRowCount={loadingRowCount}
           error={error}
@@ -231,8 +322,8 @@ export function PaginatedTable<
       <Pagination
         currentPage={effectiveCurrentPage}
         totalPages={effectiveTotalPages}
-        totalItems={totalItems}
-        pageSize={pageSize}
+        totalItems={effectiveTotalItems}
+        pageSize={effectivePageSize}
         disabled={isLoading}
         onPageChange={handlePageChange}
       />

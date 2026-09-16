@@ -1,8 +1,8 @@
 "use client";
 
 import React from "react";
-
 import { cn } from "@/lib/utils";
+import { useTableContext } from "./table-context";
 
 export interface TableToolbarPageSizeProps {
   value?: number;
@@ -13,19 +13,28 @@ export interface TableToolbarPageSizeProps {
 }
 
 export function TableToolbarPageSize({
-  value = 10,
-  options = [10, 20, 30, 50, 100],
-  onChange,
-  disabled = false,
+  value: propValue,
+  options: propOptions,
+  onChange: propOnChange,
+  disabled: propDisabled,
   className,
 }: TableToolbarPageSizeProps) {
+  const context = useTableContext();
+
+  const isControlled = propValue !== undefined;
+  const activeValue = isControlled ? propValue : context?.pageSize ?? 10;
+  const activeOptions =
+    propOptions ?? context?.pageSizeOptions ?? [10, 20, 30, 50, 100];
+  const activeOnChange = propOnChange ?? context?.setPageSize;
+  const activeDisabled =
+    propDisabled ?? context?.isLoading ?? false;
+
   return (
     <select
-      value={value}
-      disabled={disabled}
-      onChange={(event) =>
-        onChange?.(Number(event.target.value))
-      }
+      value={activeValue}
+      disabled={activeDisabled}
+      aria-label="Records per page"
+      onChange={(event) => activeOnChange?.(Number(event.target.value))}
       className={cn(
         `
           cursor-pointer
@@ -52,7 +61,7 @@ export function TableToolbarPageSize({
         className
       )}
     >
-      {options.map((size) => (
+      {activeOptions.map((size) => (
         <option key={size} value={size}>
           {size} / page
         </option>

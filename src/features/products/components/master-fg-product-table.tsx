@@ -38,17 +38,20 @@ export const masterProductColumns: ColumnDef<MasterProduct>[] = [
 ];
 
 export interface MasterFGProductTableProps {
+  pageSize?: number;
+  searchValue?: string;
   onNotify?: (msg: string) => void;
 }
 
-export function MasterFGProductTable({ onNotify }: MasterFGProductTableProps) {
+export function MasterFGProductTable({ pageSize, searchValue, onNotify }: MasterFGProductTableProps) {
   const { data = [], isLoading, error, refetch } = useMasterProducts();
 
   return (
     <PaginatedTable<MasterProduct>
       data={data}
       columns={masterProductColumns}
-      pageSize={10}
+      pageSize={pageSize}
+      searchValue={searchValue}
       minWidth="1200px"
       actionsLabel="Action"
       isLoading={isLoading}

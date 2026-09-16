@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
-import type { RowBase, RowId } from "@/components/ui/tables/ReusableTable.types";
+import type { RowBase, RowId } from "@/components/ui/table/ReusableTable.types";
 
 export interface UseClientPaginationOptions<T extends RowBase> {
   data: T[];

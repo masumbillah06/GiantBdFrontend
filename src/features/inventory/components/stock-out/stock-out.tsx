@@ -108,7 +108,7 @@ export function StockOut() {
         lcOptions={lcs}
         onLcCreate={handleLcCreated}
         onPoCreate={handlePoCreated}
-      />
+      />  
 
       {/* 2. Basic Information */}
       <BasicInfo

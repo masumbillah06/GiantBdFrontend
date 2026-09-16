@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React from "react";
 import Breadcrumb from "@/components/ui/breadcrumb";
 import {
+  TableProvider,
   TableToolbar,
   TableToolbarActions,
   TableToolbarExport,
@@ -23,21 +24,8 @@ import {
 } from "@/lib/mock-data/attributes/sub-zone.mock";
 
 export default function SubZonePage() {
-  const [searchValue, setSearchValue] = useState("");
-  const [pageSize, setPageSize] = useState(10);
-
-  const filteredData = useMemo(() => {
-    if (!searchValue.trim()) return subZoneData;
-    const query = searchValue.toLowerCase();
-    return subZoneData.filter((row) =>
-      Object.values(row).some((val) =>
-        String(val ?? "").toLowerCase().includes(query)
-      )
-    );
-  }, [searchValue]);
-
   return (
-    <>
+    <TableProvider title="Sub Zones" entityName="Sub Zone">
       <div className="min-h-20 w-full flex justify-between items-center bg-white shadow-sm rounded-xl">
         <div>
           <Breadcrumb
@@ -50,22 +38,13 @@ export default function SubZonePage() {
         </div>
         <div>
           <TableToolbar>
-            <TableToolbarSearch
-              value={searchValue}
-              onChange={setSearchValue}
-            />
+            <TableToolbarSearch placeholder="Search sub zones..." />
             <TableToolbarActions>
               <TableToolbarExport />
               <TableToolbarReload />
               <TableToolbarPrint />
-              <TableToolbarPageSize
-                value={pageSize}
-                onChange={setPageSize}
-              />
-              <TableToolbarNew
-                onClick={() => console.log("Create new sub zone")}
-                label="New Sub Zone"
-              />
+              <TableToolbarPageSize />
+              <TableToolbarNew />
             </TableToolbarActions>
           </TableToolbar>
         </div>
@@ -73,32 +52,32 @@ export default function SubZonePage() {
 
       <div className="mt-4">
         <PaginatedTable<SubZoneRecord>
-          data={filteredData}
+          data={subZoneData}
           columns={columns}
-          pageSize={pageSize}
-          minWidth="1000px"
+          minWidth="800px"
           actionsLabel="Action"
-          renderActions={(row) => (
+          renderActions={(row, notify) => (
             <ActionButtonGroup aria-label={`Actions for sub zone ${row.id}`}>
               <ActionButton
                 label="View Sub Zone"
                 icon={Eye}
-                onClick={() => console.log("View sub zone", row.id)}
+                onClick={() => notify(`Viewing sub zone #${row.id}`)}
               />
               <ActionButton
                 label="Edit Sub Zone"
                 icon={PenSquareIcon}
-                onClick={() => console.log("Edit sub zone", row.id)}
+                onClick={() => notify(`Editing sub zone #${row.id}`)}
               />
               <ActionButton
                 label="Delete Sub Zone"
                 icon={Trash2}
-                onClick={() => console.log("Delete sub zone", row.id)}
+                variant="danger"
+                onClick={() => notify(`Deleted sub zone #${row.id}`)}
               />
             </ActionButtonGroup>
           )}
         />
       </div>
-    </>
+    </TableProvider>
   );
 }

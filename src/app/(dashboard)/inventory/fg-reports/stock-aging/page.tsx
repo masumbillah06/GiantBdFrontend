@@ -2,6 +2,7 @@
 
 import Breadcrumb from "@/components/ui/breadcrumb";
 import {
+  TableProvider,
   TableToolbar,
   TableToolbarActions,
   TableToolbarExport,
@@ -24,7 +25,7 @@ import {
 
 export default function StockAgingOverviewPage() {
   return (
-    <>
+    <TableProvider title="Stock Aging Report" entityName="Stock Aging Record">
       {/* ── Breadcrumb Bar with Table Actions ── */}
       <div className="flex min-h-20 w-full items-center justify-between rounded-xl bg-white shadow-xs">
         <div>
@@ -48,7 +49,7 @@ export default function StockAgingOverviewPage() {
         </div>
         <div>
           <TableToolbar>
-            <TableToolbarSearch />
+            <TableToolbarSearch placeholder="Search stock aging..." />
             <TableToolbarActions>
               <TableToolbarExport />
               <TableToolbarReload />
@@ -70,7 +71,6 @@ export default function StockAgingOverviewPage() {
         <PaginatedTable<StockAgingItem>
           data={stockAgingData}
           columns={stockAgingColumns}
-          pageSize={10}
           minWidth="2300px"
           actionsLabel="Action"
           renderActions={(row, notify) => (
@@ -111,6 +111,6 @@ export default function StockAgingOverviewPage() {
           )}
         />
       </div>
-    </>
+    </TableProvider>
   );
 }

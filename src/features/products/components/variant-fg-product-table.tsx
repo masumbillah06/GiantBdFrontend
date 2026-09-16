@@ -36,17 +36,20 @@ export const variantProductColumns: ColumnDef<VariantProduct>[] = [
 ];
 
 export interface VariantFGProductTableProps {
+  pageSize?: number;
+  searchValue?: string;
   onNotify?: (msg: string) => void;
 }
 
-export function VariantFGProductTable({ onNotify }: VariantFGProductTableProps) {
+export function VariantFGProductTable({ pageSize, searchValue, onNotify }: VariantFGProductTableProps) {
   const { data = [], isLoading, error, refetch } = useVariantProducts();
 
   return (
     <PaginatedTable<VariantProduct>
       data={data}
       columns={variantProductColumns}
-      pageSize={10}
+      pageSize={pageSize}
+      searchValue={searchValue}
       minWidth="1200px"
       actionsLabel="Action"
       isLoading={isLoading}

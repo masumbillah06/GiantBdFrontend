@@ -2,29 +2,50 @@
 
 import React from "react";
 import { RotateCcw } from "lucide-react";
-
 import { ActionButton } from "@/components/ui/buttons/action-button";
+import { useTableContext } from "./table-context";
 
 export interface TableToolbarReloadProps {
-  onClick?: () => void;
+  onClick?: () => unknown;
   isLoading?: boolean;
   disabled?: boolean;
+  label?: string;
 }
 
 export function TableToolbarReload({
-  onClick,
-  isLoading = false,
-  disabled = false,
+  onClick: propOnClick,
+  isLoading: propIsLoading,
+  disabled: propDisabled,
+  label,
 }: TableToolbarReloadProps) {
-  const isDisabled = disabled || isLoading;
+  const context = useTableContext();
+
+  const isControlledLoading = propIsLoading !== undefined;
+  const activeLoading = isControlledLoading
+    ? propIsLoading
+    : Boolean(context?.isReloading) || Boolean(context?.isLoading);
+
+  const activeDisabled =
+    propDisabled ?? (activeLoading || (context?.isLoading ?? false));
+
+  const activeOnClick = propOnClick ?? context?.reload;
+
+  const activeLabel =
+    label ?? (activeLoading ? "Reloading..." : "Reload Data");
+
+  const handleClick = () => {
+    if (activeOnClick) {
+      void activeOnClick();
+    }
+  };
 
   return (
     <ActionButton
-      label={isLoading ? "Reloading..." : "Reload Data"}
+      label={activeLabel}
       icon={RotateCcw}
-      disabled={isDisabled}
-      className={isLoading ? "animate-spin" : ""}
-      onClick={onClick}
+      disabled={activeDisabled}
+      iconClassName={activeLoading ? "animate-spin" : ""}
+      onClick={handleClick}
     />
   );
 }

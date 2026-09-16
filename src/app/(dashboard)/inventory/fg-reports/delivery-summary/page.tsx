@@ -2,6 +2,7 @@
 
 import Breadcrumb from "@/components/ui/breadcrumb";
 import {
+  TableProvider,
   TableToolbar,
   TableToolbarActions,
   TableToolbarExport,
@@ -15,7 +16,7 @@ import DeliverySummary from "@/features/reports/components/delivery/delivery-sum
 
 export default function DeliverySummaryPage() {
   return (
-    <>
+    <TableProvider title="Delivery Summary Report" entityName="Delivery Summary">
       {/* ── Breadcrumb Bar with Table Actions ── */}
       <div className="min-h-20 w-full flex justify-between items-center bg-white shadow-sm rounded-xl">
         <div>
@@ -30,7 +31,7 @@ export default function DeliverySummaryPage() {
         </div>
         <div>
           <TableToolbar>
-            <TableToolbarSearch />
+            <TableToolbarSearch placeholder="Search summary..." />
             <TableToolbarActions>
               <TableToolbarExport />
               <TableToolbarReload />
@@ -46,6 +47,6 @@ export default function DeliverySummaryPage() {
       <div className="mt-4">
         <DeliverySummary />
       </div>
-    </>
+    </TableProvider>
   );
 }

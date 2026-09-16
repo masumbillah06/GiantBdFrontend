@@ -2,6 +2,7 @@
 
 import Breadcrumb from "@/components/ui/breadcrumb";
 import {
+  TableProvider,
   TableToolbar,
   TableToolbarActions,
   TableToolbarExport,
@@ -16,7 +17,7 @@ import { VariantFGProductTable } from "@/features/products/components/variant-fg
 
 export default function VariantFGProductPage() {
   return (
-    <>
+    <TableProvider title="Variant FG Products" entityName="Variant Product">
       {/* ── Breadcrumb Bar with Table Toolbar ── */}
       <div className="min-h-20 w-full flex justify-between items-center bg-white shadow-sm rounded-xl">
         <div>
@@ -30,7 +31,7 @@ export default function VariantFGProductPage() {
         </div>
         <div>
           <TableToolbar>
-            <TableToolbarSearch />
+            <TableToolbarSearch placeholder="Search variant products..." />
             <TableToolbarActions>
               <TableToolbarExport />
               <TableToolbarReload />
@@ -51,6 +52,6 @@ export default function VariantFGProductPage() {
       <div className="mt-4">
         <VariantFGProductTable />
       </div>
-    </>
+    </TableProvider>
   );
 }

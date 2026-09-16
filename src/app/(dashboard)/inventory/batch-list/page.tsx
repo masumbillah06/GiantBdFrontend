@@ -2,6 +2,7 @@
 
 import Breadcrumb from "@/components/ui/breadcrumb";
 import {
+  TableProvider,
   TableToolbar,
   TableToolbarActions,
   TableToolbarExport,
@@ -24,7 +25,13 @@ export default function BatchListPage() {
   const { data = [], isLoading, error, refetch } = useBatchList();
 
   return (
-    <>
+    <TableProvider
+      title="Warehouse FG Batch List"
+      entityName="Batch"
+      onReload={() => refetch()}
+      isLoading={isLoading}
+      newButtonLabel="New Batch"
+    >
       {/* ── Breadcrumb Bar with Table Actions ── */}
       <div className="min-h-20 w-full flex justify-between items-center bg-white shadow-sm rounded-xl">
         <div>
@@ -38,10 +45,10 @@ export default function BatchListPage() {
         </div>
         <div>
           <TableToolbar>
-            <TableToolbarSearch />
+            <TableToolbarSearch placeholder="Search batches..." />
             <TableToolbarActions>
               <TableToolbarExport />
-              <TableToolbarReload onClick={() => refetch()} isLoading={isLoading} />
+              <TableToolbarReload />
               <TableToolbarPrint />
               <TableToolbarPageSize />
               <TableToolbarNew />
@@ -60,7 +67,6 @@ export default function BatchListPage() {
         <PaginatedTable<BatchItem>
           data={data}
           columns={batchColumns}
-          pageSize={14}
           minWidth="1200px"
           actionsLabel="Action"
           isLoading={isLoading}
@@ -112,6 +118,6 @@ export default function BatchListPage() {
           )}
         />
       </div>
-    </>
+    </TableProvider>
   );
 }

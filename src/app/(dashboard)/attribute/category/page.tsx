@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React from "react";
 import Breadcrumb from "@/components/ui/breadcrumb";
 import {
+  TableProvider,
   TableToolbar,
   TableToolbarActions,
   TableToolbarExport,
@@ -23,21 +24,8 @@ import {
 } from "@/lib/mock-data/attributes/category.mock";
 
 export default function CategoryPage() {
-  const [searchValue, setSearchValue] = useState("");
-  const [pageSize, setPageSize] = useState(10);
-
-  const filteredData = useMemo(() => {
-    if (!searchValue.trim()) return categoryData;
-    const query = searchValue.toLowerCase();
-    return categoryData.filter((row) =>
-      Object.values(row).some((val) =>
-        String(val ?? "").toLowerCase().includes(query)
-      )
-    );
-  }, [searchValue]);
-
   return (
-    <>
+    <TableProvider title="Categories" entityName="Category">
       <div className="min-h-20 w-full flex justify-between items-center bg-white shadow-sm rounded-xl">
         <div>
           <Breadcrumb
@@ -50,22 +38,13 @@ export default function CategoryPage() {
         </div>
         <div>
           <TableToolbar>
-            <TableToolbarSearch
-              value={searchValue}
-              onChange={setSearchValue}
-            />
+            <TableToolbarSearch placeholder="Search categories..." />
             <TableToolbarActions>
               <TableToolbarExport />
               <TableToolbarReload />
               <TableToolbarPrint />
-              <TableToolbarPageSize
-                value={pageSize}
-                onChange={setPageSize}
-              />
-              <TableToolbarNew
-                onClick={() => console.log("Create new category")}
-                label="New Category"
-              />
+              <TableToolbarPageSize />
+              <TableToolbarNew />
             </TableToolbarActions>
           </TableToolbar>
         </div>
@@ -73,32 +52,32 @@ export default function CategoryPage() {
 
       <div className="mt-4">
         <PaginatedTable<CategoryRecord>
-          data={filteredData}
+          data={categoryData}
           columns={columns}
-          pageSize={pageSize}
           minWidth="800px"
           actionsLabel="Action"
-          renderActions={(row) => (
+          renderActions={(row, notify) => (
             <ActionButtonGroup aria-label={`Actions for category ${row.id}`}>
               <ActionButton
                 label="View Category"
                 icon={Eye}
-                onClick={() => console.log("View category", row.id)}
+                onClick={() => notify(`Viewing category #${row.id}`)}
               />
               <ActionButton
                 label="Edit Category"
                 icon={PenSquareIcon}
-                onClick={() => console.log("Edit category", row.id)}
+                onClick={() => notify(`Editing category #${row.id}`)}
               />
               <ActionButton
                 label="Delete Category"
                 icon={Trash2}
-                onClick={() => console.log("Delete category", row.id)}
+                variant="danger"
+                onClick={() => notify(`Deleted category #${row.id}`)}
               />
             </ActionButtonGroup>
           )}
         />
       </div>
-    </>
+    </TableProvider>
   );
 }

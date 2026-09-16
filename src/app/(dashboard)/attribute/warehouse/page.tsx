@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React from "react";
 import Breadcrumb from "@/components/ui/breadcrumb";
 import {
+  TableProvider,
   TableToolbar,
   TableToolbarActions,
   TableToolbarExport,
@@ -23,21 +24,8 @@ import {
 } from "@/lib/mock-data/attributes/warehouse.mock";
 
 export default function WarehousePage() {
-  const [searchValue, setSearchValue] = useState("");
-  const [pageSize, setPageSize] = useState(10);
-
-  const filteredData = useMemo(() => {
-    if (!searchValue.trim()) return warehouseData;
-    const query = searchValue.toLowerCase();
-    return warehouseData.filter((row) =>
-      Object.values(row).some((val) =>
-        String(val ?? "").toLowerCase().includes(query)
-      )
-    );
-  }, [searchValue]);
-
   return (
-    <>
+    <TableProvider title="Warehouses" entityName="Warehouse">
       <div className="min-h-20 w-full flex justify-between items-center bg-white shadow-sm rounded-xl">
         <div>
           <Breadcrumb
@@ -50,22 +38,13 @@ export default function WarehousePage() {
         </div>
         <div>
           <TableToolbar>
-            <TableToolbarSearch
-              value={searchValue}
-              onChange={setSearchValue}
-            />
+            <TableToolbarSearch placeholder="Search warehouses..." />
             <TableToolbarActions>
               <TableToolbarExport />
               <TableToolbarReload />
               <TableToolbarPrint />
-              <TableToolbarPageSize
-                value={pageSize}
-                onChange={setPageSize}
-              />
-              <TableToolbarNew
-                onClick={() => console.log("Create new warehouse")}
-                label="New Warehouse"
-              />
+              <TableToolbarPageSize />
+              <TableToolbarNew />
             </TableToolbarActions>
           </TableToolbar>
         </div>
@@ -73,32 +52,32 @@ export default function WarehousePage() {
 
       <div className="mt-4">
         <PaginatedTable<WarehouseRecord>
-          data={filteredData}
+          data={warehouseData}
           columns={columns}
-          pageSize={pageSize}
           minWidth="900px"
           actionsLabel="Action"
-          renderActions={(row) => (
+          renderActions={(row, notify) => (
             <ActionButtonGroup aria-label={`Actions for warehouse ${row.id}`}>
               <ActionButton
                 label="View Warehouse"
                 icon={Eye}
-                onClick={() => console.log("View warehouse", row.id)}
+                onClick={() => notify(`Viewing warehouse #${row.id}`)}
               />
               <ActionButton
                 label="Edit Warehouse"
                 icon={PenSquareIcon}
-                onClick={() => console.log("Edit warehouse", row.id)}
+                onClick={() => notify(`Editing warehouse #${row.id}`)}
               />
               <ActionButton
                 label="Delete Warehouse"
                 icon={Trash2}
-                onClick={() => console.log("Delete warehouse", row.id)}
+                variant="danger"
+                onClick={() => notify(`Deleted warehouse #${row.id}`)}
               />
             </ActionButtonGroup>
           )}
         />
       </div>
-    </>
+    </TableProvider>
   );
 }

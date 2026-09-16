@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React from "react";
 import Breadcrumb from "@/components/ui/breadcrumb";
 import {
+  TableProvider,
   TableToolbar,
   TableToolbarActions,
   TableToolbarExport,
@@ -23,21 +24,8 @@ import {
 } from "@/lib/mock-data/attributes/sub-category.mock";
 
 export default function SubCategoryPage() {
-  const [searchValue, setSearchValue] = useState("");
-  const [pageSize, setPageSize] = useState(10);
-
-  const filteredData = useMemo(() => {
-    if (!searchValue.trim()) return subCategoryData;
-    const query = searchValue.toLowerCase();
-    return subCategoryData.filter((row) =>
-      Object.values(row).some((val) =>
-        String(val ?? "").toLowerCase().includes(query)
-      )
-    );
-  }, [searchValue]);
-
   return (
-    <>
+    <TableProvider title="Sub Categories" entityName="Sub Category">
       <div className="min-h-20 w-full flex justify-between items-center bg-white shadow-sm rounded-xl">
         <div>
           <Breadcrumb
@@ -50,22 +38,13 @@ export default function SubCategoryPage() {
         </div>
         <div>
           <TableToolbar>
-            <TableToolbarSearch
-              value={searchValue}
-              onChange={setSearchValue}
-            />
+            <TableToolbarSearch placeholder="Search sub categories..." />
             <TableToolbarActions>
               <TableToolbarExport />
               <TableToolbarReload />
               <TableToolbarPrint />
-              <TableToolbarPageSize
-                value={pageSize}
-                onChange={setPageSize}
-              />
-              <TableToolbarNew
-                onClick={() => console.log("Create new sub category")}
-                label="New Sub Category"
-              />
+              <TableToolbarPageSize />
+              <TableToolbarNew />
             </TableToolbarActions>
           </TableToolbar>
         </div>
@@ -73,32 +52,32 @@ export default function SubCategoryPage() {
 
       <div className="mt-4">
         <PaginatedTable<SubCategoryRecord>
-          data={filteredData}
+          data={subCategoryData}
           columns={columns}
-          pageSize={pageSize}
-          minWidth="1000px"
+          minWidth="800px"
           actionsLabel="Action"
-          renderActions={(row) => (
+          renderActions={(row, notify) => (
             <ActionButtonGroup aria-label={`Actions for sub category ${row.id}`}>
               <ActionButton
                 label="View Sub Category"
                 icon={Eye}
-                onClick={() => console.log("View sub category", row.id)}
+                onClick={() => notify(`Viewing sub category #${row.id}`)}
               />
               <ActionButton
                 label="Edit Sub Category"
                 icon={PenSquareIcon}
-                onClick={() => console.log("Edit sub category", row.id)}
+                onClick={() => notify(`Editing sub category #${row.id}`)}
               />
               <ActionButton
                 label="Delete Sub Category"
                 icon={Trash2}
-                onClick={() => console.log("Delete sub category", row.id)}
+                variant="danger"
+                onClick={() => notify(`Deleted sub category #${row.id}`)}
               />
             </ActionButtonGroup>
           )}
         />
       </div>
-    </>
+    </TableProvider>
   );
 }

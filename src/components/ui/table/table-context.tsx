@@ -1,0 +1,347 @@
+"use client";
+
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import type { ColumnDef, RowBase } from "./ReusableTable.types";
+import { exportToCsv } from "./table-export";
+import { printTableData } from "./table-print";
+
+export interface RegisteredTableMeta<T extends RowBase = RowBase> {
+  data?: T[];
+  columns?: ColumnDef<T>[];
+  selectedIds?: Array<string | number>;
+  isLoading?: boolean;
+  onRetry?: () => void;
+  getRowId?: (row: T) => string | number;
+  tableRef?: React.RefObject<HTMLDivElement | null>;
+}
+
+export interface TableContextValue<T extends RowBase = RowBase> {
+  // Search
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+  searchPlaceholder?: string;
+
+  // Pagination
+  pageSize: number;
+  setPageSize: (size: number) => void;
+  pageSizeOptions: number[];
+  currentPage: number;
+  setCurrentPage: (page: number) => void;
+
+  // Reload
+  reload: () => Promise<void>;
+  isLoading: boolean;
+  isReloading: boolean;
+
+  // Export & Print
+  exportData: (filename?: string) => void;
+  printTable: () => void;
+  title?: string;
+  entityName?: string;
+  exportFilename?: string;
+
+  // New action
+  onNew?: () => void;
+  newButtonLabel?: string;
+  newHref?: string;
+
+  // Table Registration
+  registeredTable: RegisteredTableMeta<any> | null;
+  registerTable: (meta: RegisteredTableMeta<any>) => void;
+  unregisterTable: () => void;
+
+  // Feedback notifications
+  actionNotice: string | null;
+  notify: (msg: string, duration?: number) => void;
+  clearNotice: () => void;
+}
+
+const TableContext = createContext<TableContextValue | null>(null);
+
+export interface TableProviderProps<T extends RowBase = RowBase> {
+  children: React.ReactNode;
+  initialSearchQuery?: string;
+  initialPageSize?: number;
+  pageSizeOptions?: number[];
+  searchPlaceholder?: string;
+  title?: string;
+  entityName?: string;
+  exportFilename?: string;
+  onReload?: () => unknown;
+  onExport?: (data: T[], columns: ColumnDef<T>[]) => void;
+  onPrint?: () => void;
+  onNew?: () => void;
+  newButtonLabel?: string;
+  newHref?: string;
+  data?: T[];
+  columns?: ColumnDef<T>[];
+  getRowId?: (row: T) => string | number;
+  isLoading?: boolean;
+  onSearchChange?: (query: string) => void;
+  onPageSizeChange?: (size: number) => void;
+}
+
+export function TableProvider<T extends RowBase = RowBase>({
+  children,
+  initialSearchQuery = "",
+  initialPageSize = 10,
+  pageSizeOptions = [10, 20, 30, 50, 100],
+  searchPlaceholder,
+  title,
+  entityName,
+  exportFilename,
+  onReload,
+  onExport,
+  onPrint,
+  onNew,
+  newButtonLabel = "New",
+  newHref,
+  data: propData,
+  columns: propColumns,
+  getRowId: propGetRowId,
+  isLoading: propIsLoading,
+  onSearchChange,
+  onPageSizeChange,
+}: TableProviderProps<T>) {
+  const [searchQuery, setSearchQueryState] = useState(initialSearchQuery);
+  const [pageSize, setPageSizeState] = useState(initialPageSize);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isReloading, setIsReloading] = useState(false);
+  const [registeredTable, setRegisteredTable] =
+    useState<RegisteredTableMeta<T> | null>(null);
+  const [actionNotice, setActionNotice] = useState<string | null>(null);
+  const noticeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearNotice = useCallback(() => {
+    if (noticeTimerRef.current) {
+      clearTimeout(noticeTimerRef.current);
+      noticeTimerRef.current = null;
+    }
+    setActionNotice(null);
+  }, []);
+
+  const notify = useCallback(
+    (msg: string, duration = 3500) => {
+      clearNotice();
+      setActionNotice(msg);
+      noticeTimerRef.current = setTimeout(() => {
+        setActionNotice(null);
+        noticeTimerRef.current = null;
+      }, duration);
+    },
+    [clearNotice]
+  );
+
+  const setSearchQuery = useCallback(
+    (query: string) => {
+      setSearchQueryState(query);
+      setCurrentPage(1);
+      onSearchChange?.(query);
+    },
+    [onSearchChange]
+  );
+
+  const setPageSize = useCallback(
+    (size: number) => {
+      setPageSizeState(size);
+      setCurrentPage(1);
+      onPageSizeChange?.(size);
+    },
+    [onPageSizeChange]
+  );
+
+  const registerTable = useCallback((meta: RegisteredTableMeta<T>) => {
+    setRegisteredTable((current) => {
+      if (
+        current?.data === meta.data &&
+        current?.columns === meta.columns &&
+        current?.selectedIds === meta.selectedIds &&
+        current?.isLoading === meta.isLoading &&
+        current?.onRetry === meta.onRetry &&
+        current?.getRowId === meta.getRowId &&
+        current?.tableRef === meta.tableRef
+      ) {
+        return current;
+      }
+
+      return meta;
+    });
+  }, []);
+
+  const unregisterTable = useCallback(() => {
+    setRegisteredTable(null);
+  }, []);
+
+  // Combined data and columns (props take precedence or fall back to registered)
+  const effectiveData = propData ?? registeredTable?.data ?? [];
+  const effectiveColumns = propColumns ?? registeredTable?.columns ?? [];
+  const effectiveGetRowId = propGetRowId ?? registeredTable?.getRowId;
+  const effectiveIsLoading =
+    Boolean(propIsLoading) || Boolean(registeredTable?.isLoading) || isReloading;
+
+  const reload = useCallback(async () => {
+    setIsReloading(true);
+    try {
+      if (onReload) {
+        await onReload();
+      } else if (registeredTable?.onRetry) {
+        await registeredTable.onRetry();
+      }
+      notify("Table data reloaded successfully");
+    } catch (err) {
+      notify(
+        err instanceof Error ? err.message : "Failed to reload table data"
+      );
+    } finally {
+      setIsReloading(false);
+    }
+  }, [onReload, registeredTable, notify]);
+
+  const exportData = useCallback(
+    (customFilename?: string) => {
+      if (onExport) {
+        onExport(effectiveData, effectiveColumns);
+        return;
+      }
+
+      const effectiveFilename =
+        customFilename ??
+        exportFilename ??
+        (title ? title.toLowerCase().replace(/\s+/g, "-") : "table-export");
+
+      const count = exportToCsv({
+        data: effectiveData,
+        columns: effectiveColumns,
+        filename: effectiveFilename,
+        selectedIds: registeredTable?.selectedIds,
+        getRowId: effectiveGetRowId,
+      });
+
+      if (count > 0) {
+        notify(`Exported ${count} record${count === 1 ? "" : "s"} to CSV`);
+      } else {
+        notify("No data available to export");
+      }
+    },
+    [
+      onExport,
+      exportFilename,
+      title,
+      effectiveData,
+      effectiveColumns,
+      registeredTable?.selectedIds,
+      effectiveGetRowId,
+      notify,
+    ]
+  );
+
+  const printTable = useCallback(() => {
+    if (onPrint) {
+      onPrint();
+      return;
+    }
+
+    printTableData({
+      title: title ?? (entityName ? `${entityName} List` : "Table Records"),
+      data: effectiveData,
+      columns: effectiveColumns,
+      selectedIds: registeredTable?.selectedIds,
+      getRowId: effectiveGetRowId,
+    });
+  }, [
+    onPrint,
+    title,
+    entityName,
+    effectiveData,
+    effectiveColumns,
+    registeredTable?.selectedIds,
+    effectiveGetRowId,
+  ]);
+
+  const value = useMemo<TableContextValue<T>>(
+    () => ({
+      searchQuery,
+      setSearchQuery,
+      searchPlaceholder,
+      pageSize,
+      setPageSize,
+      pageSizeOptions,
+      currentPage,
+      setCurrentPage,
+      reload,
+      isLoading: effectiveIsLoading,
+      isReloading,
+      exportData,
+      printTable,
+      title,
+      entityName,
+      exportFilename,
+      onNew,
+      newButtonLabel,
+      newHref,
+      registeredTable,
+      registerTable: registerTable as (meta: RegisteredTableMeta<any>) => void,
+      unregisterTable,
+      actionNotice,
+      notify,
+      clearNotice,
+    }),
+    [
+      searchQuery,
+      setSearchQuery,
+      searchPlaceholder,
+      pageSize,
+      setPageSize,
+      pageSizeOptions,
+      currentPage,
+      reload,
+      effectiveIsLoading,
+      isReloading,
+      exportData,
+      printTable,
+      title,
+      entityName,
+      exportFilename,
+      onNew,
+      newButtonLabel,
+      newHref,
+      registeredTable,
+      registerTable,
+      unregisterTable,
+      actionNotice,
+      notify,
+      clearNotice,
+    ]
+  );
+
+  return (
+    <TableContext.Provider value={value as unknown as TableContextValue}>
+      {children}
+    </TableContext.Provider>
+  );
+}
+
+/**
+ * Hook to access TableContext. Returns null if not wrapped in TableProvider.
+ */
+export function useTableContext<T extends RowBase = RowBase>(): TableContextValue<T> | null {
+  const ctx = useContext(TableContext);
+  return (ctx as TableContextValue<T> | null) ?? null;
+}
+
+/**
+ * Hook to get unified toolbar bindings whether inside TableProvider or standalone.
+ */
+export function useTableToolbar() {
+  const context = useTableContext();
+  return context;
+}
+
+export default TableProvider;

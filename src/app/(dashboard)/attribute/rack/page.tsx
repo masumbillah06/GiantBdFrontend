@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React from "react";
 import Breadcrumb from "@/components/ui/breadcrumb";
 import {
+  TableProvider,
   TableToolbar,
   TableToolbarActions,
   TableToolbarExport,
@@ -23,21 +24,8 @@ import {
 } from "@/lib/mock-data/attributes/rack.mock";
 
 export default function RackPage() {
-  const [searchValue, setSearchValue] = useState("");
-  const [pageSize, setPageSize] = useState(10);
-
-  const filteredData = useMemo(() => {
-    if (!searchValue.trim()) return rackData;
-    const query = searchValue.toLowerCase();
-    return rackData.filter((row) =>
-      Object.values(row).some((val) =>
-        String(val ?? "").toLowerCase().includes(query)
-      )
-    );
-  }, [searchValue]);
-
   return (
-    <>
+    <TableProvider title="Racks" entityName="Rack">
       <div className="min-h-20 w-full flex justify-between items-center bg-white shadow-sm rounded-xl">
         <div>
           <Breadcrumb
@@ -50,22 +38,13 @@ export default function RackPage() {
         </div>
         <div>
           <TableToolbar>
-            <TableToolbarSearch
-              value={searchValue}
-              onChange={setSearchValue}
-            />
+            <TableToolbarSearch placeholder="Search racks..." />
             <TableToolbarActions>
               <TableToolbarExport />
               <TableToolbarReload />
               <TableToolbarPrint />
-              <TableToolbarPageSize
-                value={pageSize}
-                onChange={setPageSize}
-              />
-              <TableToolbarNew
-                onClick={() => console.log("Create new rack")}
-                label="New Rack"
-              />
+              <TableToolbarPageSize />
+              <TableToolbarNew />
             </TableToolbarActions>
           </TableToolbar>
         </div>
@@ -73,32 +52,32 @@ export default function RackPage() {
 
       <div className="mt-4">
         <PaginatedTable<RackRecord>
-          data={filteredData}
+          data={rackData}
           columns={columns}
-          pageSize={pageSize}
-          minWidth="1000px"
+          minWidth="800px"
           actionsLabel="Action"
-          renderActions={(row) => (
+          renderActions={(row, notify) => (
             <ActionButtonGroup aria-label={`Actions for rack ${row.id}`}>
               <ActionButton
                 label="View Rack"
                 icon={Eye}
-                onClick={() => console.log("View rack", row.id)}
+                onClick={() => notify(`Viewing rack #${row.id}`)}
               />
               <ActionButton
                 label="Edit Rack"
                 icon={PenSquareIcon}
-                onClick={() => console.log("Edit rack", row.id)}
+                onClick={() => notify(`Editing rack #${row.id}`)}
               />
               <ActionButton
                 label="Delete Rack"
                 icon={Trash2}
-                onClick={() => console.log("Delete rack", row.id)}
+                variant="danger"
+                onClick={() => notify(`Deleted rack #${row.id}`)}
               />
             </ActionButtonGroup>
           )}
         />
       </div>
-    </>
+    </TableProvider>
   );
 }

@@ -14,17 +14,20 @@ export const roleColumns: ColumnDef<RoleRecord>[] = [
 ];
 
 export interface RoleTableProps {
+  pageSize?: number;
+  searchValue?: string;
   onNotify?: (msg: string) => void;
 }
 
-export function RoleTable({ onNotify }: RoleTableProps) {
+export function RoleTable({ pageSize, searchValue, onNotify }: RoleTableProps) {
   const { data = [], isLoading, error, refetch } = useRoles();
 
   return (
     <PaginatedTable<RoleRecord>
       data={data}
       columns={roleColumns}
-      pageSize={10}
+      pageSize={pageSize}
+      searchValue={searchValue}
       minWidth="1200px"
       actionsLabel="Action"
       isLoading={isLoading}

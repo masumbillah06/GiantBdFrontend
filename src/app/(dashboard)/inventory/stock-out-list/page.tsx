@@ -2,6 +2,7 @@
 
 import Breadcrumb from "@/components/ui/breadcrumb";
 import {
+  TableProvider,
   TableToolbar,
   TableToolbarActions,
   TableToolbarExport,
@@ -24,7 +25,14 @@ export default function StockOutListPage() {
   const { data = [], isLoading, error, refetch } = useStockOutList();
 
   return (
-    <>
+    <TableProvider
+      title="Stock Out List"
+      entityName="Stock Out"
+      onReload={() => refetch()}
+      isLoading={isLoading}
+      newHref="/inventory/stock-out"
+      newButtonLabel="New Stock Out"
+    >
       {/* ── Breadcrumb Bar with Table Actions ── */}
       <div className="min-h-20 w-full flex justify-between items-center bg-white shadow-sm rounded-xl">
         <div>
@@ -38,10 +46,10 @@ export default function StockOutListPage() {
         </div>
         <div>
           <TableToolbar>
-            <TableToolbarSearch />
+            <TableToolbarSearch placeholder="Search stock out records..." />
             <TableToolbarActions>
               <TableToolbarExport />
-              <TableToolbarReload onClick={() => refetch()} isLoading={isLoading} />
+              <TableToolbarReload />
               <TableToolbarPrint />
               <TableToolbarPageSize />
               <TableToolbarNew />
@@ -60,7 +68,6 @@ export default function StockOutListPage() {
         <PaginatedTable<StockOutItem>
           data={data}
           columns={stockOutColumns}
-          pageSize={17}
           minWidth="1200px"
           actionsLabel="Action"
           isLoading={isLoading}
@@ -120,6 +127,6 @@ export default function StockOutListPage() {
           )}
         />
       </div>
-    </>
+    </TableProvider>
   );
 }

@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
 import Breadcrumb from "@/components/ui/breadcrumb";
 import {
+  TableProvider,
   TableToolbar,
   TableToolbarActions,
   TableToolbarExport,
@@ -15,11 +15,8 @@ import {
 import { BuyerTable } from "@/features/crm/components/buyer-table";
 
 export default function BuyerPage() {
-  const [searchValue, setSearchValue] = useState("");
-  const [pageSize, setPageSize] = useState(10);
-
   return (
-    <>
+    <TableProvider title="Customer Records" entityName="Customer">
       <div className="min-h-20 w-full flex justify-between items-center bg-white shadow-sm rounded-xl">
         <div>
           <Breadcrumb
@@ -32,30 +29,21 @@ export default function BuyerPage() {
         </div>
         <div>
           <TableToolbar>
-            <TableToolbarSearch
-              value={searchValue}
-              onChange={setSearchValue}
-            />
+            <TableToolbarSearch placeholder="Search customers..." />
             <TableToolbarActions>
               <TableToolbarExport />
               <TableToolbarReload />
               <TableToolbarPrint />
-              <TableToolbarPageSize
-                value={pageSize}
-                onChange={setPageSize}
-              />
-              <TableToolbarNew
-                onClick={() => console.log("Create new customer")}
-                label="New Customer"
-              />
+              <TableToolbarPageSize />
+              <TableToolbarNew />
             </TableToolbarActions>
           </TableToolbar>
         </div>
       </div>
 
       <div className="mt-4">
-        <BuyerTable searchValue={searchValue} pageSize={pageSize} />
+        <BuyerTable />
       </div>
-    </>
+    </TableProvider>
   );
 }

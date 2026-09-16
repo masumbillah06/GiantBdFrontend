@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React from "react";
 import Breadcrumb from "@/components/ui/breadcrumb";
 import {
+  TableProvider,
   TableToolbar,
   TableToolbarActions,
   TableToolbarExport,
@@ -23,21 +24,8 @@ import {
 } from "@/lib/mock-data/attributes/zone.mock";
 
 export default function ZonePage() {
-  const [searchValue, setSearchValue] = useState("");
-  const [pageSize, setPageSize] = useState(10);
-
-  const filteredData = useMemo(() => {
-    if (!searchValue.trim()) return zoneData;
-    const query = searchValue.toLowerCase();
-    return zoneData.filter((row) =>
-      Object.values(row).some((val) =>
-        String(val ?? "").toLowerCase().includes(query)
-      )
-    );
-  }, [searchValue]);
-
   return (
-    <>
+    <TableProvider title="Zones" entityName="Zone">
       <div className="min-h-20 w-full flex justify-between items-center bg-white shadow-sm rounded-xl">
         <div>
           <Breadcrumb
@@ -50,22 +38,13 @@ export default function ZonePage() {
         </div>
         <div>
           <TableToolbar>
-            <TableToolbarSearch
-              value={searchValue}
-              onChange={setSearchValue}
-            />
+            <TableToolbarSearch placeholder="Search zones..." />
             <TableToolbarActions>
               <TableToolbarExport />
               <TableToolbarReload />
               <TableToolbarPrint />
-              <TableToolbarPageSize
-                value={pageSize}
-                onChange={setPageSize}
-              />
-              <TableToolbarNew
-                onClick={() => console.log("Create new zone")}
-                label="New Zone"
-              />
+              <TableToolbarPageSize />
+              <TableToolbarNew />
             </TableToolbarActions>
           </TableToolbar>
         </div>
@@ -73,32 +52,32 @@ export default function ZonePage() {
 
       <div className="mt-4">
         <PaginatedTable<ZoneRecord>
-          data={filteredData}
+          data={zoneData}
           columns={columns}
-          pageSize={pageSize}
           minWidth="1000px"
           actionsLabel="Action"
-          renderActions={(row) => (
+          renderActions={(row, notify) => (
             <ActionButtonGroup aria-label={`Actions for zone ${row.id}`}>
               <ActionButton
                 label="View Zone"
                 icon={Eye}
-                onClick={() => console.log("View zone", row.id)}
+                onClick={() => notify(`Viewing zone #${row.id}`)}
               />
               <ActionButton
                 label="Edit Zone"
                 icon={PenSquareIcon}
-                onClick={() => console.log("Edit zone", row.id)}
+                onClick={() => notify(`Editing zone #${row.id}`)}
               />
               <ActionButton
                 label="Delete Zone"
                 icon={Trash2}
-                onClick={() => console.log("Delete zone", row.id)}
+                variant="danger"
+                onClick={() => notify(`Deleted zone #${row.id}`)}
               />
             </ActionButtonGroup>
           )}
         />
       </div>
-    </>
+    </TableProvider>
   );
 }

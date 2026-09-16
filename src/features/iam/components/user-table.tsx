@@ -24,17 +24,20 @@ export const userColumns: ColumnDef<UserRecord>[] = [
 ];
 
 export interface UserTableProps {
+  pageSize?: number;
+  searchValue?: string;
   onNotify?: (msg: string) => void;
 }
 
-export function UserTable({ onNotify }: UserTableProps) {
+export function UserTable({ pageSize, searchValue, onNotify }: UserTableProps) {
   const { data = [], isLoading, error, refetch } = useUsers();
 
   return (
     <PaginatedTable<UserRecord>
       data={data}
       columns={userColumns}
-      pageSize={10}
+      pageSize={pageSize}
+      searchValue={searchValue}
       minWidth="1200px"
       actionsLabel="Action"
       isLoading={isLoading}

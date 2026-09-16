@@ -2,6 +2,7 @@
 
 import Breadcrumb from "@/components/ui/breadcrumb";
 import {
+  TableProvider,
   TableToolbar,
   TableToolbarActions,
   TableToolbarExport,
@@ -15,7 +16,7 @@ import { PeriodicDelivery } from "@/features/reports/components/delivery";
 
 export default function WeeklyDeliveryPage() {
   return (
-    <>
+    <TableProvider title="Weekly Delivery Report" entityName="Delivery">
       {/* ── Breadcrumb Bar with Table Actions ── */}
       <div className="min-h-20 w-full flex justify-between items-center bg-white shadow-sm rounded-xl">
         <div>
@@ -30,7 +31,7 @@ export default function WeeklyDeliveryPage() {
         </div>
         <div>
           <TableToolbar>
-            <TableToolbarSearch />
+            <TableToolbarSearch placeholder="Search delivery..." />
             <TableToolbarActions>
               <TableToolbarExport />
               <TableToolbarReload />
@@ -46,6 +47,6 @@ export default function WeeklyDeliveryPage() {
       <div className="mt-4">
         <PeriodicDelivery mode="weekly" />
       </div>
-    </>
+    </TableProvider>
   );
 }

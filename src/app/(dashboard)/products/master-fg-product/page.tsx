@@ -2,6 +2,7 @@
 
 import Breadcrumb from "@/components/ui/breadcrumb";
 import {
+  TableProvider,
   TableToolbar,
   TableToolbarActions,
   TableToolbarExport,
@@ -16,7 +17,7 @@ import { MasterFGProductTable } from "@/features/products/components/master-fg-p
 
 export default function MasterFGProductPage() {
   return (
-    <>
+    <TableProvider title="Master FG Products" entityName="Master Product">
       {/* ── Breadcrumb Bar with Table Toolbar ── */}
       <div className="min-h-20 w-full flex justify-between items-center bg-white shadow-sm rounded-xl">
         <div>
@@ -30,7 +31,7 @@ export default function MasterFGProductPage() {
         </div>
         <div>
           <TableToolbar>
-            <TableToolbarSearch />
+            <TableToolbarSearch placeholder="Search master products..." />
             <TableToolbarActions>
               <TableToolbarExport />
               <TableToolbarReload />
@@ -51,6 +52,6 @@ export default function MasterFGProductPage() {
       <div className="mt-4">
         <MasterFGProductTable />
       </div>
-    </>
+    </TableProvider>
   );
 }

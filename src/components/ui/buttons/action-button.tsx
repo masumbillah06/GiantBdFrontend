@@ -24,6 +24,8 @@ interface BaseActionButtonProps {
   disabled?: boolean;
   /** Extra classes merged onto the root element. */
   className?: string;
+  /** Extra classes merged onto the icon element. */
+  iconClassName?: string;
   /** Which side the tooltip is anchored to. Defaults to "top". */
   tooltipSide?: "top" | "bottom" | "left" | "right";
 }
@@ -58,6 +60,7 @@ export function ActionButton(props: ActionButtonProps) {
     variant = "default",
     disabled = false,
     className,
+    iconClassName,
     tooltipSide = "top",
   } = props;
 
@@ -77,7 +80,14 @@ export function ActionButton(props: ActionButtonProps) {
     className
   );
 
-  const icon = <Icon aria-hidden="true" focusable="false" className="h-4 w-4" strokeWidth={2} />;
+  const icon = (
+    <Icon
+      aria-hidden="true"
+      focusable="false"
+      className={cx("h-4 w-4", iconClassName)}
+      strokeWidth={2}
+    />
+  );
 
   // Disabled link
   if ("href" in props && typeof props.href === "string" && disabled) {

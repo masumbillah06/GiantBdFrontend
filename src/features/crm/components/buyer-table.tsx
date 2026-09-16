@@ -22,11 +22,11 @@ export interface BuyerTableProps {
   onNotify?: (msg: string) => void;
 }
 
-export function BuyerTable({ searchValue = "", pageSize = 10, onNotify }: BuyerTableProps) {
+export function BuyerTable({ searchValue, pageSize, onNotify }: BuyerTableProps) {
   const { data = [], isLoading, error, refetch } = useBuyers();
 
   const filteredData = useMemo(() => {
-    if (!searchValue.trim()) return data;
+    if (!searchValue || !searchValue.trim()) return data;
     const query = searchValue.toLowerCase();
     return data.filter((row) =>
       Object.values(row).some((val) =>

@@ -2,6 +2,7 @@
 
 import Breadcrumb from "@/components/ui/breadcrumb";
 import {
+  TableProvider,
   TableToolbar,
   TableToolbarActions,
   TableToolbarExport,
@@ -15,7 +16,7 @@ import { RoleTable } from "@/features/iam/components/role-table";
 
 export default function RolePage() {
   return (
-    <>
+    <TableProvider title="Roles" entityName="Role">
       <div className="min-h-20 w-full flex justify-between items-center bg-white shadow-sm rounded-xl">
         <div>
           <Breadcrumb
@@ -25,7 +26,7 @@ export default function RolePage() {
         </div>
         <div>
           <TableToolbar>
-            <TableToolbarSearch />
+            <TableToolbarSearch placeholder="Search roles..." />
             <TableToolbarActions>
               <TableToolbarExport />
               <TableToolbarReload />
@@ -39,6 +40,6 @@ export default function RolePage() {
       <div className="mt-4">
         <RoleTable />
       </div>
-    </>
+    </TableProvider>
   );
 }

@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { Search } from "lucide-react";
-
+import { Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTableContext } from "./table-context";
 
 export interface TableToolbarSearchProps {
   value?: string;
@@ -11,27 +11,35 @@ export interface TableToolbarSearchProps {
   placeholder?: string;
   debounceMs?: number;
   className?: string;
+  showClearButton?: boolean;
 }
 
 export function TableToolbarSearch({
-  value = "",
-  onChange,
-  placeholder = "Search records...",
-  debounceMs = 0,
+  value: propValue,
+  onChange: propOnChange,
+  placeholder: propPlaceholder,
+  debounceMs = 250,
   className,
+  showClearButton = true,
 }: TableToolbarSearchProps) {
-  const [localSearch, setLocalSearch] = useState(value);
+  const context = useTableContext();
 
-  const debounceTimerRef =
-    useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isControlled = propValue !== undefined;
+  const activeValue = isControlled ? propValue : context?.searchQuery ?? "";
+  const activeOnChange = propOnChange ?? context?.setSearchQuery;
+  const activePlaceholder =
+    propPlaceholder ?? context?.searchPlaceholder ?? "Search records...";
+
+  const [localSearch, setLocalSearch] = useState(activeValue);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   /*
-   * Keep local input synchronized when the parent
+   * Keep local input synchronized when the parent or context
    * changes the search value externally.
    */
   useEffect(() => {
-    setLocalSearch(value);
-  }, [value]);
+    setLocalSearch(activeValue);
+  }, [activeValue]);
 
   /*
    * Cleanup debounce timer when component unmounts.
@@ -47,63 +55,54 @@ export function TableToolbarSearch({
   const handleInputChange = (newValue: string) => {
     setLocalSearch(newValue);
 
-    if (!onChange) {
+    if (!activeOnChange) {
       return;
     }
 
-    /*
-     * Immediate search
-     */
     if (debounceMs <= 0) {
-      onChange(newValue);
+      activeOnChange(newValue);
       return;
     }
 
-    /*
-     * Debounced search
-     */
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
     }
 
     debounceTimerRef.current = setTimeout(() => {
-      onChange(newValue);
+      activeOnChange(newValue);
     }, debounceMs);
   };
 
-  const handleKeyDown = (
-    event: React.KeyboardEvent<HTMLInputElement>
-  ) => {
-    if (
-      event.key !== "Enter" ||
-      debounceMs <= 0 ||
-      !onChange
-    ) {
-      return;
-    }
-
+  const handleClear = () => {
+    setLocalSearch("");
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
     }
+    activeOnChange?.("");
+  };
 
-    onChange(localSearch);
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Escape") {
+      handleClear();
+      return;
+    }
+
+    if (event.key === "Enter" && debounceMs > 0 && activeOnChange) {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+      activeOnChange(localSearch);
+    }
   };
 
   return (
-    <div
-      className={cn(
-        "relative w-64 max-w-full",
-        className
-      )}
-    >
+    <div className={cn("relative w-64 max-w-full", className)}>
       <input
         type="text"
         value={localSearch}
-        onChange={(event) =>
-          handleInputChange(event.target.value)
-        }
+        onChange={(event) => handleInputChange(event.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder={placeholder}
+        placeholder={activePlaceholder}
         className="
           w-full
           rounded-lg
@@ -111,7 +110,7 @@ export function TableToolbarSearch({
           bg-slate-50/80
           py-1.5
           pl-9
-          pr-3
+          pr-8
           text-xs
           text-slate-700
           outline-none
@@ -135,6 +134,29 @@ export function TableToolbarSearch({
           text-slate-400
         "
       />
+
+      {showClearButton && localSearch.length > 0 && (
+        <button
+          type="button"
+          onClick={handleClear}
+          aria-label="Clear search"
+          className="
+            absolute
+            right-2.5
+            top-1/2
+            -translate-y-1/2
+            rounded-full
+            p-0.5
+            text-slate-400
+            hover:bg-slate-200
+            hover:text-slate-600
+            transition-colors
+            cursor-pointer
+          "
+        >
+          <X size={12} />
+        </button>
+      )}
     </div>
   );
 }

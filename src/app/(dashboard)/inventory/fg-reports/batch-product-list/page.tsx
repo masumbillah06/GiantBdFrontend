@@ -2,6 +2,7 @@
 
 import Breadcrumb from "@/components/ui/breadcrumb";
 import {
+  TableProvider,
   TableToolbar,
   TableToolbarActions,
   TableToolbarExport,
@@ -24,7 +25,7 @@ import {
 
 export default function BatchProductListPage() {
   return (
-    <>
+    <TableProvider title="Batch Product List" entityName="Batch Product">
       {/* ── Breadcrumb Bar with Table Actions ── */}
       <div className="flex min-h-20 w-full items-center justify-between rounded-xl bg-white shadow-xs">
         <div>
@@ -48,7 +49,7 @@ export default function BatchProductListPage() {
         </div>
         <div>
           <TableToolbar>
-            <TableToolbarSearch />
+            <TableToolbarSearch placeholder="Search batch products..." />
             <TableToolbarActions>
               <TableToolbarExport />
               <TableToolbarReload />
@@ -70,7 +71,6 @@ export default function BatchProductListPage() {
         <PaginatedTable<BatchProductItem>
           data={batchProductData}
           columns={batchProductColumns}
-          pageSize={10}
           minWidth="2200px"
           actionsLabel="Action"
           renderActions={(row, notify) => (
@@ -113,6 +113,6 @@ export default function BatchProductListPage() {
           )}
         />
       </div>
-    </>
+    </TableProvider>
   );
 }

@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React from "react";
 import Breadcrumb from "@/components/ui/breadcrumb";
 import {
+  TableProvider,
   TableToolbar,
   TableToolbarActions,
   TableToolbarExport,
@@ -23,21 +24,8 @@ import {
 } from "@/lib/mock-data/attributes/material.mock";
 
 export default function MaterialPage() {
-  const [searchValue, setSearchValue] = useState("");
-  const [pageSize, setPageSize] = useState(10);
-
-  const filteredData = useMemo(() => {
-    if (!searchValue.trim()) return materialData;
-    const query = searchValue.toLowerCase();
-    return materialData.filter((row) =>
-      Object.values(row).some((val) =>
-        String(val ?? "").toLowerCase().includes(query)
-      )
-    );
-  }, [searchValue]);
-
   return (
-    <>
+    <TableProvider title="Materials" entityName="Material">
       <div className="min-h-20 w-full flex justify-between items-center bg-white shadow-sm rounded-xl">
         <div>
           <Breadcrumb
@@ -50,22 +38,13 @@ export default function MaterialPage() {
         </div>
         <div>
           <TableToolbar>
-            <TableToolbarSearch
-              value={searchValue}
-              onChange={setSearchValue}
-            />
+            <TableToolbarSearch placeholder="Search materials..." />
             <TableToolbarActions>
               <TableToolbarExport />
               <TableToolbarReload />
               <TableToolbarPrint />
-              <TableToolbarPageSize
-                value={pageSize}
-                onChange={setPageSize}
-              />
-              <TableToolbarNew
-                onClick={() => console.log("Create new material")}
-                label="New Material"
-              />
+              <TableToolbarPageSize />
+              <TableToolbarNew />
             </TableToolbarActions>
           </TableToolbar>
         </div>
@@ -73,32 +52,32 @@ export default function MaterialPage() {
 
       <div className="mt-4">
         <PaginatedTable<MaterialRecord>
-          data={filteredData}
+          data={materialData}
           columns={columns}
-          pageSize={pageSize}
           minWidth="800px"
           actionsLabel="Action"
-          renderActions={(row) => (
+          renderActions={(row, notify) => (
             <ActionButtonGroup aria-label={`Actions for material ${row.id}`}>
               <ActionButton
                 label="View Material"
                 icon={Eye}
-                onClick={() => console.log("View material", row.id)}
+                onClick={() => notify(`Viewing material #${row.id}`)}
               />
               <ActionButton
                 label="Edit Material"
                 icon={PenSquareIcon}
-                onClick={() => console.log("Edit material", row.id)}
+                onClick={() => notify(`Editing material #${row.id}`)}
               />
               <ActionButton
                 label="Delete Material"
                 icon={Trash2}
-                onClick={() => console.log("Delete material", row.id)}
+                variant="danger"
+                onClick={() => notify(`Deleted material #${row.id}`)}
               />
             </ActionButtonGroup>
           )}
         />
       </div>
-    </>
+    </TableProvider>
   );
 }

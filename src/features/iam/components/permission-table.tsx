@@ -9,17 +9,20 @@ import type { PermissionRecord } from "../types/iam.types";
 import { usePermissions } from "../hooks/use-iam";
 
 export interface PermissionTableProps {
+  pageSize?: number;
+  searchValue?: string;
   onNotify?: (msg: string) => void;
 }
 
-export function PermissionTable({ onNotify }: PermissionTableProps) {
+export function PermissionTable({ pageSize, searchValue, onNotify }: PermissionTableProps) {
   const { data = [], isLoading, error, refetch } = usePermissions();
 
   return (
     <PaginatedTable<PermissionRecord>
       data={data}
       columns={permissionColumns}
-      pageSize={10}
+      pageSize={pageSize}
+      searchValue={searchValue}
       minWidth="1650px"
       actionsLabel="Actions"
       noticeDuration={3000}

@@ -2,7 +2,16 @@
 
 import React, { useState, useMemo } from "react";
 import Breadcrumb from "@/components/ui/breadcrumb";
-import TableToolbar from "@/components/ui/toolbar";
+import {
+  TableToolbar,
+  TableToolbarActions,
+  TableToolbarExport,
+  TableToolbarNew,
+  TableToolbarPageSize,
+  TableToolbarPrint,
+  TableToolbarReload,
+  TableToolbarSearch,
+} from "@/components/ui/table";
 import PaginatedTable from "@/components/ui/table/paginated-table";
 import { ActionButtonGroup } from "@/components/ui/buttons/action-button-group";
 import { ActionButton } from "@/components/ui/buttons/action-button";
@@ -40,14 +49,25 @@ export default function ZonePage() {
           />
         </div>
         <div>
-          <TableToolbar
-            searchValue={searchValue}
-            onSearchChange={setSearchValue}
-            pageSize={pageSize}
-            onPageSizeChange={setPageSize}
-            onNew={() => console.log("Create new zone")}
-            newButtonLabel="New Zone"
-          />
+          <TableToolbar>
+            <TableToolbarSearch
+              value={searchValue}
+              onChange={setSearchValue}
+            />
+            <TableToolbarActions>
+              <TableToolbarExport />
+              <TableToolbarReload />
+              <TableToolbarPrint />
+              <TableToolbarPageSize
+                value={pageSize}
+                onChange={setPageSize}
+              />
+              <TableToolbarNew
+                onClick={() => console.log("Create new zone")}
+                label="New Zone"
+              />
+            </TableToolbarActions>
+          </TableToolbar>
         </div>
       </div>
 

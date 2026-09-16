@@ -1,7 +1,16 @@
 "use client";
 
 import Breadcrumb from "@/components/ui/breadcrumb";
-import TableToolbar from "@/components/ui/toolbar";
+import {
+  TableToolbar,
+  TableToolbarActions,
+  TableToolbarExport,
+  TableToolbarNew,
+  TableToolbarPageSize,
+  TableToolbarPrint,
+  TableToolbarReload,
+  TableToolbarSearch,
+} from "@/components/ui/table";
 import FilterCard from "@/components/ui/filter-card";
 import PaginatedTable from "@/components/ui/table/paginated-table";
 import { ActionButton } from "@/components/ui/buttons/action-button";
@@ -28,7 +37,16 @@ export default function StockOutListPage() {
           />
         </div>
         <div>
-          <TableToolbar onReload={() => refetch()} isLoading={isLoading} />
+          <TableToolbar>
+            <TableToolbarSearch />
+            <TableToolbarActions>
+              <TableToolbarExport />
+              <TableToolbarReload onClick={() => refetch()} isLoading={isLoading} />
+              <TableToolbarPrint />
+              <TableToolbarPageSize />
+              <TableToolbarNew />
+            </TableToolbarActions>
+          </TableToolbar>
         </div>
       </div>
 

@@ -2,7 +2,16 @@
 
 import React, { useState } from "react";
 import Breadcrumb from "@/components/ui/breadcrumb";
-import TableToolbar from "@/components/ui/toolbar";
+import {
+  TableToolbar,
+  TableToolbarActions,
+  TableToolbarExport,
+  TableToolbarNew,
+  TableToolbarPageSize,
+  TableToolbarPrint,
+  TableToolbarReload,
+  TableToolbarSearch,
+} from "@/components/ui/table";
 import { BuyerTable } from "@/features/crm/components/buyer-table";
 
 export default function BuyerPage() {
@@ -22,14 +31,25 @@ export default function BuyerPage() {
           />
         </div>
         <div>
-          <TableToolbar
-            searchValue={searchValue}
-            onSearchChange={setSearchValue}
-            pageSize={pageSize}
-            onPageSizeChange={setPageSize}
-            onNew={() => console.log("Create new customer")}
-            newButtonLabel="New Customer"
-          />
+          <TableToolbar>
+            <TableToolbarSearch
+              value={searchValue}
+              onChange={setSearchValue}
+            />
+            <TableToolbarActions>
+              <TableToolbarExport />
+              <TableToolbarReload />
+              <TableToolbarPrint />
+              <TableToolbarPageSize
+                value={pageSize}
+                onChange={setPageSize}
+              />
+              <TableToolbarNew
+                onClick={() => console.log("Create new customer")}
+                label="New Customer"
+              />
+            </TableToolbarActions>
+          </TableToolbar>
         </div>
       </div>
 

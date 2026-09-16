@@ -4,7 +4,7 @@ import React from "react";
 import { cn } from "@/lib/utils";
 
 export interface TableToolbarActionsProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
   className?: string;
 }
 

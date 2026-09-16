@@ -4,11 +4,6 @@ import React, { useState } from "react";
 import { CreateLcPo } from "./create-lc-po";
 import { BasicInfo, type BasicInfoData } from "./basic-info";
 import { ProductDetails, type StockOutProductItem } from "./product-details";
-import { FormActionBar } from "@/components/ui/form-action-bar";
-
-export interface StockOutProps {
-  onSuccess?: () => void;
-}
 
 const INITIAL_LCS = [
   "LC-2026-001",
@@ -24,10 +19,9 @@ const INITIAL_POS_MAP: Record<string, string[]> = {
   "LC-2026-004": ["PO-88340"],
 };
 
-export function StockOut({ onSuccess }: StockOutProps) {
+export function StockOut() {
   const [lcs, setLcs] = useState<string[]>(INITIAL_LCS);
   const [posMap, setPosMap] = useState<Record<string, string[]>>(INITIAL_POS_MAP);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "info" | "error"; text: string } | null>(null);
 
   // Format today's date MM/DD/YYYY
@@ -85,47 +79,6 @@ export function StockOut({ onSuccess }: StockOutProps) {
     setTimeout(() => setMessage(null), 4000);
   };
 
-  const handleReset = () => {
-    setBasicInfo({
-      shipmentLc: "",
-      shipmentPo: "",
-      buyer: "",
-      toLocation: "",
-      stockOutDate: getTodayFormatted(),
-    });
-    setProducts([
-      {
-        id: 1,
-        name: "Product 1",
-        masterProduct: "",
-        color: "",
-        gender: "",
-        availableSizes: [],
-        selectedSizes: [],
-      },
-    ]);
-    setMessage({ type: "info", text: "Form reset to default." });
-    setTimeout(() => setMessage(null), 3000);
-  };
-
-  const handlePreview = () => {
-    setMessage({
-      type: "info",
-      text: `Stock Out Summary: LC: ${basicInfo.shipmentLc || "N/A"} | PO: ${basicInfo.shipmentPo || "N/A"} | Buyer: ${basicInfo.buyer || "N/A"} | Products: ${products.length}`,
-    });
-    setTimeout(() => setMessage(null), 5000);
-  };
-
-  const handleCreate = () => {
-    setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setMessage({ type: "success", text: "Stock out recorded successfully!" });
-      onSuccess?.();
-      setTimeout(() => setMessage(null), 4000);
-    }, 800);
-  };
-
   return (
     <div className="space-y-5">
       {/* Toast / Notification Banner */}
@@ -171,13 +124,6 @@ export function StockOut({ onSuccess }: StockOutProps) {
         onChange={setProducts}
       />
 
-      {/* 4. Action Buttons */}
-      <FormActionBar
-        onReset={handleReset}
-        onPreview={handlePreview}
-        onCreate={handleCreate}
-        isLoading={isSubmitting}
-      />
     </div>
   );
 }

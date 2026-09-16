@@ -1,7 +1,16 @@
 "use client";
 
 import Breadcrumb from "@/components/ui/breadcrumb";
-import TableToolbar from "@/components/ui/toolbar";
+import {
+  TableToolbar,
+  TableToolbarActions,
+  TableToolbarExport,
+  TableToolbarNew,
+  TableToolbarPageSize,
+  TableToolbarPrint,
+  TableToolbarReload,
+  TableToolbarSearch,
+} from "@/components/ui/table";
 import FilterCard from "@/components/ui/filter-card";
 import { MasterFGProductTable } from "@/features/products/components/master-fg-product-table";
 
@@ -20,7 +29,16 @@ export default function MasterFGProductPage() {
           />
         </div>
         <div>
-          <TableToolbar />
+          <TableToolbar>
+            <TableToolbarSearch />
+            <TableToolbarActions>
+              <TableToolbarExport />
+              <TableToolbarReload />
+              <TableToolbarPrint />
+              <TableToolbarPageSize />
+              <TableToolbarNew />
+            </TableToolbarActions>
+          </TableToolbar>
         </div>
       </div>
 

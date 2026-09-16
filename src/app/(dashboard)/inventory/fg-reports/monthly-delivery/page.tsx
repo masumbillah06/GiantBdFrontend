@@ -1,7 +1,16 @@
 "use client";
 
 import Breadcrumb from "@/components/ui/breadcrumb";
-import TableToolbar from "@/components/ui/toolbar";
+import {
+  TableToolbar,
+  TableToolbarActions,
+  TableToolbarExport,
+  TableToolbarNew,
+  TableToolbarPageSize,
+  TableToolbarPrint,
+  TableToolbarReload,
+  TableToolbarSearch,
+} from "@/components/ui/table";
 import { PeriodicDelivery } from "@/features/reports/components/delivery";
 
 export default function MonthlyDeliveryPage() {
@@ -20,7 +29,16 @@ export default function MonthlyDeliveryPage() {
           />
         </div>
         <div>
-          <TableToolbar />
+          <TableToolbar>
+            <TableToolbarSearch />
+            <TableToolbarActions>
+              <TableToolbarExport />
+              <TableToolbarReload />
+              <TableToolbarPrint />
+              <TableToolbarPageSize />
+              <TableToolbarNew />
+            </TableToolbarActions>
+          </TableToolbar>
         </div>
       </div>
 

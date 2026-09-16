@@ -1,7 +1,16 @@
 "use client";
 
 import Breadcrumb from "@/components/ui/breadcrumb";
-import TableToolbar from "@/components/ui/toolbar";
+import {
+  TableToolbar,
+  TableToolbarActions,
+  TableToolbarExport,
+  TableToolbarNew,
+  TableToolbarPageSize,
+  TableToolbarPrint,
+  TableToolbarReload,
+  TableToolbarSearch,
+} from "@/components/ui/table";
 import DeliverySummary from "@/features/reports/components/delivery/delivery-summary";
 
 export default function DeliverySummaryPage() {
@@ -20,7 +29,16 @@ export default function DeliverySummaryPage() {
           />
         </div>
         <div>
-          <TableToolbar />
+          <TableToolbar>
+            <TableToolbarSearch />
+            <TableToolbarActions>
+              <TableToolbarExport />
+              <TableToolbarReload />
+              <TableToolbarPrint />
+              <TableToolbarPageSize />
+              <TableToolbarNew />
+            </TableToolbarActions>
+          </TableToolbar>
         </div>
       </div>
 

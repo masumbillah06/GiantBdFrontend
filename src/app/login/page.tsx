@@ -76,6 +76,7 @@ function LoginContent() {
         <div
           className={`
             absolute right-0 top-0 z-10
+            absolute left-0 top-0 z-10
             flex h-full w-1/2
             items-center justify-center
             bg-white

@@ -1,7 +1,7 @@
 import React from 'react';
 import type { MaterialRecord } from '@/features/attributes/types/attribute.types';
 export type { MaterialRecord };
-import type { ColumnDef } from '@/components/ui/ReusableTable.types';
+import type { ColumnDef } from '@/components/ui/table/ReusableTable.types';
 
 export const materialData: MaterialRecord[] = [
   {

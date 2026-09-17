@@ -1,7 +1,7 @@
 import React from 'react';
 import type { SubCategoryRecord } from '@/features/attributes/types/attribute.types';
 export type { SubCategoryRecord };
-import type { ColumnDef } from '@/components/ui/ReusableTable.types';
+import type { ColumnDef } from '@/components/ui/table/ReusableTable.types';
 
 export const subCategoryData: SubCategoryRecord[] = [
   {
@@ -50,7 +50,14 @@ export const subCategoryData: SubCategoryRecord[] = [
 
 export const columns: ColumnDef<SubCategoryRecord>[] = [
   { key: "name", label: "Name" },
-  { key: "category", label: "Category" },
+  {
+    key: "category",
+    label: "Category",
+    render: (row) =>
+      typeof row.category === "object" && row.category !== null
+        ? row.category.name
+        : (row.category as string) || "-",
+  },
   { key: "description", label: "Description" },
   {
     key: "status",

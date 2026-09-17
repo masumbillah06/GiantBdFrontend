@@ -10,11 +10,32 @@ import { useMasterProducts, useMasterProductMutations } from "../hooks/use-maste
 
 export const masterProductColumns: ColumnDef<MasterProduct>[] = [
   { key: "masterProductName", label: "Master Product Name" },
-  { key: "material",          label: "Material" },
-  { key: "sku",               label: "SKU" },
-  { key: "category",          label: "Category" },
-  { key: "subCategory",       label: "Sub Category" },
-  { key: "variants",          label: "Variants" },
+  {
+    key: "material",
+    label: "Material",
+    render: (row) =>
+      typeof row.material === "object" && row.material !== null
+        ? (row.material as { name?: string }).name || "N/A"
+        : row.material || "N/A",
+  },
+  { key: "sku", label: "SKU" },
+  {
+    key: "category",
+    label: "Category",
+    render: (row) =>
+      typeof row.category === "object" && row.category !== null
+        ? (row.category as { name?: string }).name || "N/A"
+        : row.category || "N/A",
+  },
+  {
+    key: "subCategory",
+    label: "Sub Category",
+    render: (row) =>
+      typeof row.subCategory === "object" && row.subCategory !== null
+        ? (row.subCategory as { name?: string }).name || "N/A"
+        : row.subCategory || "N/A",
+  },
+  { key: "variants", label: "Variants" },
   {
     key: "label",
     label: "Label",

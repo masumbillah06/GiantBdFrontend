@@ -1,6 +1,6 @@
 import type { SubZoneRecord } from '@/features/attributes/types/attribute.types';
 export type { SubZoneRecord };
-import type { ColumnDef } from '@/components/ui/ReusableTable.types';
+import type { ColumnDef } from '@/components/ui/table/ReusableTable.types';
 
 export const subZoneData: SubZoneRecord[] = [
   {
@@ -36,6 +36,13 @@ export const subZoneData: SubZoneRecord[] = [
 export const columns: ColumnDef<SubZoneRecord>[] = [
   { key: "name", label: "Name" },
   { key: "code", label: "Code" },
-  { key: "zone", label: "Zone" },
+  {
+    key: "zone",
+    label: "Zone",
+    render: (row) =>
+      typeof row.zone === "object" && row.zone !== null
+        ? row.zone.name
+        : (row.zone as string) || "-",
+  },
   { key: "description", label: "Description" },
 ];

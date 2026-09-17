@@ -12,8 +12,8 @@ export interface LoginFormProps {
 }
 
 export function LoginForm({ onForgotPassword }: LoginFormProps) {
-  const [email, setEmail] = useState("admin@mail.com");
-  const [password, setPassword] = useState("password");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -83,7 +83,7 @@ export function LoginForm({ onForgotPassword }: LoginFormProps) {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="admin@mail.com"
+            placeholder="Enter Your Email"
             className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 placeholder-slate-400 outline-none focus:border-[#476ab8] focus:ring-1 focus:ring-[#476ab8]"
           />
         </div>
@@ -95,7 +95,7 @@ export function LoginForm({ onForgotPassword }: LoginFormProps) {
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••"
+            placeholder="Password"
             className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 pr-11 text-sm text-slate-700 placeholder-slate-400 outline-none focus:border-[#476ab8] focus:ring-1 focus:ring-[#476ab8]"
           />
           <button

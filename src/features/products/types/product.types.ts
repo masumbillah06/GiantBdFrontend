@@ -135,15 +135,34 @@ export interface BulkCreateVariantDTO {
 // Adapters
 export function adaptMasterProduct(raw: BackendMasterProduct): MasterProduct {
   const variantCount = raw._count?.variantProducts ?? raw.variantProducts?.length ?? 0;
+  const materialName =
+    typeof raw.material === 'object' && raw.material !== null
+      ? raw.material.name
+      : typeof raw.material === 'string'
+      ? raw.material
+      : 'N/A';
+  const categoryName =
+    typeof raw.category === 'object' && raw.category !== null
+      ? raw.category.name
+      : typeof raw.category === 'string'
+      ? raw.category
+      : 'N/A';
+  const subCategoryName =
+    typeof raw.subCategory === 'object' && raw.subCategory !== null
+      ? raw.subCategory.name
+      : typeof raw.subCategory === 'string'
+      ? raw.subCategory
+      : 'N/A';
+
   return {
     id: raw.id,
     masterProductName: raw.name,
     masterProduct: raw.name,
     productName: raw.name,
     sku: raw.sku,
-    material: raw.material?.name || 'N/A',
-    category: raw.category?.name || 'N/A',
-    subCategory: raw.subCategory?.name || 'N/A',
+    material: materialName || 'N/A',
+    category: categoryName || 'N/A',
+    subCategory: subCategoryName || 'N/A',
     variants: variantCount,
     label: raw.status === 'ACTIVE' ? 'verified' : 'warning',
     raw,
@@ -151,14 +170,33 @@ export function adaptMasterProduct(raw: BackendMasterProduct): MasterProduct {
 }
 
 export function adaptVariantProduct(raw: BackendVariantProduct): VariantProduct {
+  const masterProductName =
+    typeof raw.masterProduct === 'object' && raw.masterProduct !== null
+      ? raw.masterProduct.name
+      : typeof raw.masterProduct === 'string'
+      ? raw.masterProduct
+      : 'N/A';
+  const materialName =
+    typeof raw.masterProduct?.material === 'object' && raw.masterProduct?.material !== null
+      ? raw.masterProduct.material.name
+      : typeof raw.masterProduct?.material === 'string'
+      ? raw.masterProduct.material
+      : 'N/A';
+  const colorName =
+    typeof raw.color === 'object' && raw.color !== null
+      ? raw.color.name
+      : typeof raw.color === 'string'
+      ? raw.color
+      : 'N/A';
+
   return {
     id: raw.id,
-    masterProduct: raw.masterProduct?.name || 'N/A',
-    material: raw.masterProduct?.material?.name || 'N/A',
+    masterProduct: masterProductName || 'N/A',
+    material: materialName || 'N/A',
     sku: raw.sku,
     modelNo: raw.sku,
     size: raw.size,
-    color: raw.color?.name || 'N/A',
+    color: colorName || 'N/A',
     gender: raw.gender,
     uom: raw.uom,
     productsPerPacket: raw.itemsPerPacket || 1,

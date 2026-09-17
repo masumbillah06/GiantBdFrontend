@@ -15,7 +15,20 @@ function formatCsvValue(val: unknown): string {
       return val.toISOString();
     }
     if (Array.isArray(val)) {
-      return val.map((v) => (typeof v === "object" ? JSON.stringify(v) : String(v))).join("; ");
+      return val
+        .map((v) => {
+          if (v && typeof v === "object") {
+            const obj = v as Record<string, unknown>;
+            return String(obj.name ?? obj.label ?? obj.title ?? obj.code ?? obj.id ?? JSON.stringify(obj));
+          }
+          return String(v);
+        })
+        .join("; ");
+    }
+    const obj = val as Record<string, unknown>;
+    const resolved = obj.name ?? obj.label ?? obj.title ?? obj.code ?? obj.id;
+    if (resolved !== undefined && resolved !== null) {
+      return formatCsvValue(resolved);
     }
     return JSON.stringify(val);
   }

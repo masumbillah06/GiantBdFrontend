@@ -3,7 +3,7 @@
 // Seeded directly from warehouse inventory reports
 // ---------------------------------------------------------------------------
 
-import type { ColumnDef } from "@/components/ui/ReusableTable.types";
+import type { ColumnDef } from "@/components/ui/table/ReusableTable.types";
 
 export interface BatchProductItem {
   id: number;

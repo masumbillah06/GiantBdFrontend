@@ -1,6 +1,6 @@
 import type { ZoneRecord } from '@/features/attributes/types/attribute.types';
 export type { ZoneRecord };
-import type { ColumnDef } from '@/components/ui/ReusableTable.types';
+import type { ColumnDef } from '@/components/ui/table/ReusableTable.types';
 
 export const zoneData: ZoneRecord[] = [
   {
@@ -29,6 +29,13 @@ export const zoneData: ZoneRecord[] = [
 export const columns: ColumnDef<ZoneRecord>[] = [
   { key: "name", label: "Name" },
   { key: "code", label: "Code" },
-  { key: "warehouse", label: "Warehouse" },
+  {
+    key: "warehouse",
+    label: "Warehouse",
+    render: (row) =>
+      typeof row.warehouse === "object" && row.warehouse !== null
+        ? row.warehouse.name
+        : (row.warehouse as string) || "-",
+  },
   { key: "description", label: "Description" },
 ];

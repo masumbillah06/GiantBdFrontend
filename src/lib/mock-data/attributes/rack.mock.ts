@@ -1,6 +1,6 @@
 import type { RackRecord } from '@/features/attributes/types/attribute.types';
 export type { RackRecord };
-import type { ColumnDef } from '@/components/ui/ReusableTable.types';
+import type { ColumnDef } from '@/components/ui/table/ReusableTable.types';
 
 export const rackData: RackRecord[] = [
   {
@@ -57,6 +57,13 @@ export const rackData: RackRecord[] = [
 export const columns: ColumnDef<RackRecord>[] = [
   { key: "name", label: "Name" },
   { key: "code", label: "Code" },
-  { key: "subZone", label: "Sub Zone" },
+  {
+    key: "subZone",
+    label: "Sub Zone",
+    render: (row) =>
+      typeof row.subZone === "object" && row.subZone !== null
+        ? row.subZone.name
+        : (row.subZone as string) || "-",
+  },
   { key: "description", label: "Description" },
 ];

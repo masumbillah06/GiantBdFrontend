@@ -1,6 +1,6 @@
 import type { CategoryRecord } from '@/features/attributes/types/attribute.types';
 export type { CategoryRecord };
-import type { ColumnDef } from '@/components/ui/ReusableTable.types';
+import type { ColumnDef } from '@/components/ui/table/ReusableTable.types';
 
 export const categoryData: CategoryRecord[] = [
   {

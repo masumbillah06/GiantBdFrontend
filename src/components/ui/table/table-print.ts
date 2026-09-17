@@ -11,6 +11,23 @@ export interface PrintTableOptions<T extends RowBase> {
 function escapeHtml(str: unknown): string {
   if (str === null || str === undefined) return "";
   if (typeof str === "boolean") return str ? "Yes" : "No";
+  if (typeof str === "object") {
+    if (Array.isArray(str)) {
+      return str
+        .map((item) => {
+          if (item && typeof item === "object") {
+            const obj = item as Record<string, unknown>;
+            return String(obj.name ?? obj.label ?? obj.title ?? obj.code ?? obj.id ?? "");
+          }
+          return String(item ?? "");
+        })
+        .filter(Boolean)
+        .join(", ");
+    }
+    const obj = str as Record<string, unknown>;
+    const resolved = obj.name ?? obj.label ?? obj.title ?? obj.code ?? obj.id ?? "";
+    return escapeHtml(resolved);
+  }
   return String(str)
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")

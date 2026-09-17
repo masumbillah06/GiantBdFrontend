@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import type { ChangeEvent } from "react";
 import {
   ArrowUpDown,
@@ -57,7 +57,12 @@ export default function ReusableTable<
 
   const resolveId = (row: T, index: number): TId => {
     if (getRowId) return getRowId(row);
-    if (row.id !== undefined && row.id !== null) return row.id as unknown as TId;
+    if (row.id !== undefined && row.id !== null) {
+      if (typeof row.id === "object") {
+        return ((row.id as Record<string, unknown>).id ?? index) as unknown as TId;
+      }
+      return row.id as unknown as TId;
+    }
     return index as unknown as TId;
   };
 
@@ -114,9 +119,57 @@ export default function ReusableTable<
     onSortChange(sortField, nextDirection);
   };
 
-  const getCellValue = (row: T, column: ColumnDef<T>) => {
-    if (column.render) return column.render(row);
-    const value = (row as Record<string, unknown>)[column.key as string];
+  const getCellValue = (row: T, column: ColumnDef<T>): React.ReactNode => {
+    let value: unknown;
+    if (column.render) {
+      value = column.render(row);
+    } else {
+      value = (row as Record<string, unknown>)[column.key as string];
+    }
+
+    if (value === null || value === undefined) {
+      return null;
+    }
+
+    if (React.isValidElement(value)) {
+      return value;
+    }
+
+    if (typeof value === "object") {
+      const obj = value as Record<string, unknown>;
+      if (typeof obj.name === "string" || typeof obj.name === "number") {
+        return String(obj.name);
+      }
+      if (typeof obj.label === "string" || typeof obj.label === "number") {
+        return String(obj.label);
+      }
+      if (typeof obj.title === "string" || typeof obj.title === "number") {
+        return String(obj.title);
+      }
+      if (typeof obj.code === "string" || typeof obj.code === "number") {
+        return String(obj.code);
+      }
+      if (typeof obj.value === "string" || typeof obj.value === "number") {
+        return String(obj.value);
+      }
+      if (typeof obj.id === "string" || typeof obj.id === "number") {
+        return String(obj.id);
+      }
+      if (Array.isArray(value)) {
+        return value
+          .map((item) => {
+            if (item && typeof item === "object") {
+              const rec = item as Record<string, unknown>;
+              return String(rec.name ?? rec.label ?? rec.title ?? rec.code ?? rec.id ?? "");
+            }
+            return String(item ?? "");
+          })
+          .filter(Boolean)
+          .join(", ");
+      }
+      return null;
+    }
+
     return value as React.ReactNode;
   };
 
@@ -311,7 +364,13 @@ export default function ReusableTable<
                   )}
                   {showId && (
                     <td className="whitespace-nowrap px-5 py-2 text-sm text-slate-950 group-hover:text-white">
-                      {row.id ?? String(rowId)}
+                      {typeof row.id === "object" && row.id !== null
+                        ? String(
+                            (row.id as Record<string, unknown>).name ??
+                              (row.id as Record<string, unknown>).id ??
+                              rowId
+                          )
+                        : (row.id ?? String(rowId))}
                     </td>
                   )}
                   {columns.map((column) => {

@@ -9,14 +9,35 @@ import type { VariantProduct } from "../types/product.types";
 import { useVariantProducts } from "../hooks/use-master-products";
 
 export const variantProductColumns: ColumnDef<VariantProduct>[] = [
-  { key: "masterProduct", label: "Master Product" },
-  { key: "material",      label: "Material" },
-  { key: "sku",           label: "SKU" },
-  { key: "modelNo",       label: "Model No" },
-  { key: "size",          label: "Size" },
-  { key: "color",         label: "Color" },
-  { key: "gender",        label: "Gender" },
-  { key: "uom",           label: "UOM" },
+  {
+    key: "masterProduct",
+    label: "Master Product",
+    render: (row) =>
+      typeof row.masterProduct === "object" && row.masterProduct !== null
+        ? (row.masterProduct as { name?: string }).name || "N/A"
+        : row.masterProduct || "N/A",
+  },
+  {
+    key: "material",
+    label: "Material",
+    render: (row) =>
+      typeof row.material === "object" && row.material !== null
+        ? (row.material as { name?: string }).name || "N/A"
+        : row.material || "N/A",
+  },
+  { key: "sku", label: "SKU" },
+  { key: "modelNo", label: "Model No" },
+  { key: "size", label: "Size" },
+  {
+    key: "color",
+    label: "Color",
+    render: (row) =>
+      typeof row.color === "object" && row.color !== null
+        ? (row.color as { name?: string }).name || "N/A"
+        : row.color || "N/A",
+  },
+  { key: "gender", label: "Gender" },
+  { key: "uom", label: "UOM" },
   { key: "productsPerPacket", label: "Products/Packet" },
   {
     key: "status",

@@ -32,7 +32,12 @@ export async function getMasterProducts(
 ): Promise<MasterProduct[]> {
   try {
     const res = await api.get(API.products.master, { params });
-    const rawList: BackendMasterProduct[] = res.data?.data || [];
+    const rawList: BackendMasterProduct[] =
+      res.data?.data !== undefined
+        ? res.data.data || []
+        : Array.isArray(res.data)
+        ? res.data
+        : [];
     return rawList.map(adaptMasterProduct);
   } catch (error) {
     console.warn('[ProductsService] Failed to fetch master products:', error);
@@ -44,7 +49,12 @@ export async function getMasterProductsPaginated(
   params?: Record<string, any>
 ): Promise<GetMasterProductsResult> {
   const res = await api.get(API.products.master, { params });
-  const rawList: BackendMasterProduct[] = res.data?.data || [];
+  const rawList: BackendMasterProduct[] =
+    res.data?.data !== undefined
+      ? res.data.data || []
+      : Array.isArray(res.data)
+      ? res.data
+      : [];
   const meta: PaginatedMeta = res.data?.meta || {
     total: rawList.length,
     per_page: params?.per_page || 20,
@@ -85,7 +95,12 @@ export async function getVariantProducts(
 ): Promise<VariantProduct[]> {
   try {
     const res = await api.get(API.products.variants, { params });
-    const rawList: BackendVariantProduct[] = res.data?.data || [];
+    const rawList: BackendVariantProduct[] =
+      res.data?.data !== undefined
+        ? res.data.data || []
+        : Array.isArray(res.data)
+        ? res.data
+        : [];
     return rawList.map(adaptVariantProduct);
   } catch (error) {
     console.warn('[ProductsService] Failed to fetch variants:', error);
@@ -97,7 +112,12 @@ export async function getVariantProductsPaginated(
   params?: Record<string, any>
 ): Promise<GetVariantProductsResult> {
   const res = await api.get(API.products.variants, { params });
-  const rawList: BackendVariantProduct[] = res.data?.data || [];
+  const rawList: BackendVariantProduct[] =
+    res.data?.data !== undefined
+      ? res.data.data || []
+      : Array.isArray(res.data)
+      ? res.data
+      : [];
   const meta: PaginatedMeta = res.data?.meta || {
     total: rawList.length,
     per_page: params?.per_page || 20,

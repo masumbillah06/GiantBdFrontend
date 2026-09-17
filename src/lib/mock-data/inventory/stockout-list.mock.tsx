@@ -8,7 +8,7 @@
 // ---------------------------------------------------------------------------
 
 import type { StockOutItem } from '@/features/inventory/types/inventory.types';
-import type { ColumnDef } from '@/components/ui/ReusableTable.types';
+import type { ColumnDef } from '@/components/ui/table/ReusableTable.types';
 
 // Re-export status literal types for consumers that relied on the originals
 export type StockOutStatus = 'Issued' | 'Pending' | 'Received';

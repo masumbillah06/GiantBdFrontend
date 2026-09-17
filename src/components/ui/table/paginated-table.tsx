@@ -175,6 +175,12 @@ export function PaginatedTable<
             return false;
           }
 
+          if (typeof cellVal === "object" && !React.isValidElement(cellVal)) {
+            const obj = cellVal as Record<string, unknown>;
+            cellVal =
+              obj.name ?? obj.label ?? obj.title ?? obj.code ?? obj.id ?? "";
+          }
+
           const cellString = String(cellVal).toLowerCase().trim();
           return cellString === targetVal;
         });
@@ -188,7 +194,12 @@ export function PaginatedTable<
         // Search across all defined columns
         for (const col of columns) {
           const rowRecord = row as Record<string, unknown>;
-          const cellVal = rowRecord[col.key as string];
+          let cellVal: unknown = rowRecord[col.key as string];
+          if (cellVal && typeof cellVal === "object" && !React.isValidElement(cellVal)) {
+            const obj = cellVal as Record<string, unknown>;
+            cellVal =
+              obj.name ?? obj.label ?? obj.title ?? obj.code ?? obj.id ?? "";
+          }
           if (cellVal !== undefined && cellVal !== null) {
             if (String(cellVal).toLowerCase().includes(query)) {
               return true;
@@ -196,9 +207,17 @@ export function PaginatedTable<
           }
         }
         // Search across all object properties as fallback
-        return Object.values(row).some((val) =>
-          String(val ?? "").toLowerCase().includes(query)
-        );
+        return Object.values(row).some((val) => {
+          if (val && typeof val === "object" && !React.isValidElement(val)) {
+            const obj = val as Record<string, unknown>;
+            const text =
+              obj.name ?? obj.label ?? obj.title ?? obj.code ?? obj.id;
+            if (text !== undefined && text !== null) {
+              return String(text).toLowerCase().includes(query);
+            }
+          }
+          return String(val ?? "").toLowerCase().includes(query);
+        });
       });
     }
 

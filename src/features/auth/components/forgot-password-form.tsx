@@ -21,7 +21,7 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
       {/* Logo */}
       <div className="mb-8 flex justify-center">
         <Image
-          src="/giantbdLogo.webp"
+          src="/image.png"
           alt="Giant BD Co Limited"
           width={170}
           height={64}

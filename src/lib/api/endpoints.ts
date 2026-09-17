@@ -1,85 +1,100 @@
 /**
  * API Endpoint Registry
  *
- * All backend API URL paths are declared here.
- * Services import from this file so that if a URL changes,
- * you change it in one place only.
- *
- * Convention: paths start with "/" and do NOT include the base URL.
- * The base URL is handled by the http-client.
+ * All backend API URL paths matching the NestJS backend controllers.
+ * Global prefix `/api` is handled automatically by the API client.
  */
 
 export const API = {
   auth: {
     login: '/auth/login',
-    logout: '/auth/logout',
+    verifyOtp: '/auth/verify-otp',
     refresh: '/auth/refresh',
-    me: '/auth/me',
+    logout: '/auth/logout',
+    changePassword: '/auth/change-password',
   },
 
-  inventory: {
-    // Stock In
-    stockIn: '/inventory/stock-in',
-    stockInById: (id: number) => `/inventory/stock-in/${id}`,
-
-    // Stock Out
-    stockOut: '/inventory/stock-out',
-    stockOutById: (id: number) => `/inventory/stock-out/${id}`,
-    stockOutList: '/inventory/stock-out/list',
-
-    // Batches
-    batches: '/inventory/batches',
-    batchById: (id: string) => `/inventory/batches/${id}`,
+  users: {
+    list: '/users',
+    me: '/users/me',
+    byId: (id: string) => `/users/${id}`,
+    register: '/users/register',
+    avatar: (id: string) => `/users/${id}/avatar`,
+    signature: (id: string) => `/users/${id}/signature`,
+    restore: (id: string) => `/users/${id}/restore`,
   },
 
-  products: {
-    master: '/products/master',
-    masterById: (id: number) => `/products/master/${id}`,
-    variants: '/products/variants',
-    variantById: (id: number) => `/products/variants/${id}`,
+  roles: {
+    list: '/roles',
+    byId: (id: string) => `/roles/${id}`,
   },
 
-  crm: {
-    buyers: '/crm/buyers',
-    buyerById: (id: number) => `/crm/buyers/${id}`,
+  permissions: {
+    list: '/permissions',
+    byId: (id: string) => `/permissions/${id}`,
   },
 
   attributes: {
     categories: '/attributes/categories',
-    subCategories: '/attributes/sub-categories',
+    categoryById: (id: string) => `/attributes/categories/${id}`,
+    subCategories: '/attributes/subcategories',
+    subCategoryById: (id: string) => `/attributes/subcategories/${id}`,
     materials: '/attributes/materials',
+    materialById: (id: string) => `/attributes/materials/${id}`,
     colors: '/attributes/colors',
+    colorById: (id: string) => `/attributes/colors/${id}`,
     warehouses: '/attributes/warehouses',
+    warehouseById: (id: string) => `/attributes/warehouses/${id}`,
     zones: '/attributes/zones',
-    subZones: '/attributes/sub-zones',
+    zoneById: (id: string) => `/attributes/zones/${id}`,
+    subZones: '/attributes/subzones',
+    subZoneById: (id: string) => `/attributes/subzones/${id}`,
     racks: '/attributes/racks',
+    rackById: (id: string) => `/attributes/racks/${id}`,
+    locations: '/attributes/locations',
+    locationById: (id: string) => `/attributes/locations/${id}`,
+    locationByBarcode: (code: string) => `/attributes/locations/barcode/${code}`,
   },
 
-  iam: {
-    users: '/iam/users',
-    userById: (id: number) => `/iam/users/${id}`,
-    roles: '/iam/roles',
-    roleById: (id: number) => `/iam/roles/${id}`,
-    permissions: '/iam/permissions',
-    permissionById: (id: number) => `/iam/permissions/${id}`,
+  products: {
+    master: '/master-products',
+    masterById: (id: string) => `/master-products/${id}`,
+    masterRestore: (id: string) => `/master-products/${id}/restore`,
+    variants: '/variants',
+    variantById: (id: string) => `/variants/${id}`,
+    variantBulk: '/variants/bulk',
+    variantPicture: (id: string) => `/variants/${id}/picture`,
   },
 
-  reports: {
-    weekllyDelivery: '/reports/weekly-delivery',
-    monthlyDelivery: '/reports/monthly-delivery',
-    deliverySummary: '/reports/delivery-summary',
-    stockAging: '/reports/stock-aging',
-    fgMasterStock: '/reports/fg-master-stock',
-    locationWiseStock: '/reports/location-wise-stock',
-    batchProductList: '/reports/batch-product-list',
-    fgCurrentStock: '/reports/fg-current-stock',
-    stockLedger: '/reports/stock-ledger',
+  crm: {
+    buyers: '/buyers',
+    buyerById: (id: string) => `/buyers/${id}`,
+    buyerRestore: (id: string) => `/buyers/${id}/restore`,
+    lc: '/lc',
+    lcById: (id: string) => `/lc/${id}`,
+    po: '/po',
+    poById: (id: string) => `/po/${id}`,
+    poItems: (id: string) => `/po/${id}/items`,
+  },
+
+  inventory: {
+    stock: '/inventory/stock',
+    stockIn: '/inventory/stock-in',
+    stockInPreview: '/inventory/stock-in/preview',
+    stockOut: '/inventory/stock-out',
+    stockOutById: (id: string) => `/inventory/stock-out/${id}`,
+    stockOutPreviewPo: (poId: string) => `/inventory/stock-out/preview-po/${poId}`,
+    stockOutStatus: (id: string) => `/inventory/stock-out/${id}/status`,
+    stockOutCancel: (id: string) => `/inventory/stock-out/${id}/cancel`,
+    batches: '/inventory/batches',
+    batchById: (id: string) => `/inventory/batches/${id}`,
+    batchItemById: (id: string) => `/inventory/batch-items/${id}`,
+    movements: '/inventory/movements',
   },
 
   dashboard: {
-    stats: '/dashboard/stats',
-    recentStockIn: '/dashboard/recent-stock-in',
-    requisitions: '/dashboard/requisitions',
+    metrics: '/dashboard/metrics',
   },
 } as const;
 
+export default API;

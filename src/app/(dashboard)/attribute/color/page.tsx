@@ -22,8 +22,10 @@ import {
   columns,
   type ColorRecord,
 } from "@/lib/mock-data/attributes/color.mock";
+import { useColors } from "@/features/attributes/hooks/use-attributes";
 
 export default function ColorPage() {
+  const { data = colorData, isLoading, error, refetch } = useColors();
   return (
     <TableProvider title="Colors" entityName="Color">
       <div className="min-h-20 w-full flex justify-between items-center bg-white shadow-sm rounded-xl">
@@ -52,10 +54,13 @@ export default function ColorPage() {
 
       <div className="mt-4">
         <PaginatedTable<ColorRecord>
-          data={colorData}
+          data={data}
           columns={columns}
           minWidth="800px"
           actionsLabel="Action"
+          isLoading={isLoading}
+          error={error ? error.message : null}
+          onRetry={() => refetch()}
           renderActions={(row, notify) => (
             <ActionButtonGroup aria-label={`Actions for color ${row.id}`}>
               <ActionButton

@@ -20,7 +20,7 @@ export interface RoleTableProps {
 }
 
 export function RoleTable({ pageSize, searchValue, onNotify }: RoleTableProps) {
-  const { data = [], isLoading, error, refetch } = useRoles();
+  const { data = [], isLoading, error, refetch } = useRoles({ search: searchValue });
 
   return (
     <PaginatedTable<RoleRecord>

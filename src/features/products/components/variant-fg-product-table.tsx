@@ -43,7 +43,7 @@ export interface VariantFGProductTableProps {
 }
 
 export function VariantFGProductTable({ pageSize, searchValue, filters, onNotify }: VariantFGProductTableProps) {
-  const { data = [], isLoading, error, refetch } = useVariantProducts();
+  const { data = [], isLoading, error, refetch } = useVariantProducts({ search: searchValue, ...filters });
 
   return (
     <PaginatedTable<VariantProduct>

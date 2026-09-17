@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getCategories,
   getColors,
@@ -10,61 +10,89 @@ import {
   getZones,
   getSubZones,
   getRacks,
+  getLocations,
+  createCategory,
+  updateCategory,
+  deleteCategory,
 } from "../services/attributes.service";
 
-export function useCategories() {
+export function useCategories(params?: Record<string, any>) {
   return useQuery({
-    queryKey: ["attributes", "categories"],
-    queryFn: getCategories,
+    queryKey: ["attributes", "categories", params],
+    queryFn: () => getCategories(params),
   });
 }
 
-export function useColors() {
+export function useCategoryMutations() {
+  const queryClient = useQueryClient();
+  const createMut = useMutation({
+    mutationFn: createCategory,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["attributes", "categories"] }),
+  });
+  const updateMut = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: { name?: string; description?: string } }) =>
+      updateCategory(id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["attributes", "categories"] }),
+  });
+  const deleteMut = useMutation({
+    mutationFn: deleteCategory,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["attributes", "categories"] }),
+  });
+  return { createMut, updateMut, deleteMut };
+}
+
+export function useColors(params?: Record<string, any>) {
   return useQuery({
-    queryKey: ["attributes", "colors"],
-    queryFn: getColors,
+    queryKey: ["attributes", "colors", params],
+    queryFn: () => getColors(params),
   });
 }
 
-export function useMaterials() {
+export function useMaterials(params?: Record<string, any>) {
   return useQuery({
-    queryKey: ["attributes", "materials"],
-    queryFn: getMaterials,
+    queryKey: ["attributes", "materials", params],
+    queryFn: () => getMaterials(params),
   });
 }
 
-export function useSubCategories() {
+export function useSubCategories(params?: Record<string, any>) {
   return useQuery({
-    queryKey: ["attributes", "sub-categories"],
-    queryFn: getSubCategories,
+    queryKey: ["attributes", "sub-categories", params],
+    queryFn: () => getSubCategories(params),
   });
 }
 
-export function useWarehouses() {
+export function useWarehouses(params?: Record<string, any>) {
   return useQuery({
-    queryKey: ["attributes", "warehouses"],
-    queryFn: getWarehouses,
+    queryKey: ["attributes", "warehouses", params],
+    queryFn: () => getWarehouses(params),
   });
 }
 
-export function useZones() {
+export function useZones(params?: Record<string, any>) {
   return useQuery({
-    queryKey: ["attributes", "zones"],
-    queryFn: getZones,
+    queryKey: ["attributes", "zones", params],
+    queryFn: () => getZones(params),
   });
 }
 
-export function useSubZones() {
+export function useSubZones(params?: Record<string, any>) {
   return useQuery({
-    queryKey: ["attributes", "sub-zones"],
-    queryFn: getSubZones,
+    queryKey: ["attributes", "sub-zones", params],
+    queryFn: () => getSubZones(params),
   });
 }
 
-export function useRacks() {
+export function useRacks(params?: Record<string, any>) {
   return useQuery({
-    queryKey: ["attributes", "racks"],
-    queryFn: getRacks,
+    queryKey: ["attributes", "racks", params],
+    queryFn: () => getRacks(params),
   });
 }
 
+export function useLocations(params?: Record<string, any>) {
+  return useQuery({
+    queryKey: ["attributes", "locations", params],
+    queryFn: () => getLocations(params),
+  });
+}

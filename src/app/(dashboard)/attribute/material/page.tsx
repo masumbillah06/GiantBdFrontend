@@ -22,8 +22,10 @@ import {
   columns,
   type MaterialRecord,
 } from "@/lib/mock-data/attributes/material.mock";
+import { useMaterials } from "@/features/attributes/hooks/use-attributes";
 
 export default function MaterialPage() {
+  const { data = materialData, isLoading, error, refetch } = useMaterials();
   return (
     <TableProvider title="Materials" entityName="Material">
       <div className="min-h-20 w-full flex justify-between items-center bg-white shadow-sm rounded-xl">
@@ -52,10 +54,13 @@ export default function MaterialPage() {
 
       <div className="mt-4">
         <PaginatedTable<MaterialRecord>
-          data={materialData}
+          data={data}
           columns={columns}
           minWidth="800px"
           actionsLabel="Action"
+          isLoading={isLoading}
+          error={error ? error.message : null}
+          onRetry={() => refetch()}
           renderActions={(row, notify) => (
             <ActionButtonGroup aria-label={`Actions for material ${row.id}`}>
               <ActionButton

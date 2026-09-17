@@ -22,8 +22,10 @@ import {
   columns,
   type CategoryRecord,
 } from "@/lib/mock-data/attributes/category.mock";
+import { useCategories } from "@/features/attributes/hooks/use-attributes";
 
 export default function CategoryPage() {
+  const { data = categoryData, isLoading, error, refetch } = useCategories();
   return (
     <TableProvider title="Categories" entityName="Category">
       <div className="min-h-20 w-full flex justify-between items-center bg-white shadow-sm rounded-xl">
@@ -52,10 +54,13 @@ export default function CategoryPage() {
 
       <div className="mt-4">
         <PaginatedTable<CategoryRecord>
-          data={categoryData}
+          data={data}
           columns={columns}
           minWidth="800px"
           actionsLabel="Action"
+          isLoading={isLoading}
+          error={error ? error.message : null}
+          onRetry={() => refetch()}
           renderActions={(row, notify) => (
             <ActionButtonGroup aria-label={`Actions for category ${row.id}`}>
               <ActionButton

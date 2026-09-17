@@ -1,83 +1,81 @@
 /**
  * HTTP Client — base layer for all API communication.
- *
- * Currently a thin wrapper around fetch. When the backend API is ready:
- * 1. Set NEXT_PUBLIC_API_URL in .env.local
- * 2. Add auth token injection (see `getAuthHeaders`)
- * 3. Replace service stubs in features/<domain>/services/ to call apiGet/apiPost
+ * Powered by Axios with automatic token refresh, credentials, and error extraction.
  */
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
+import { AxiosRequestConfig } from 'axios';
+import { api, API_BASE_URL } from './client';
+import type { ApiResponse, PaginatedResponse } from '@/types/api.types';
 
-// ---------------------------------------------------------------------------
-// Auth header helper
-// ---------------------------------------------------------------------------
+export { api, API_BASE_URL };
 
-import { getClientToken } from "@/lib/auth/session";
-
-function getAuthHeaders(): HeadersInit {
-  const token = getClientToken();
-  if (token) return { Authorization: `Bearer ${token}` };
-  return {};
-}
-
-// ---------------------------------------------------------------------------
-// Core request helper
-// ---------------------------------------------------------------------------
-
-async function request<T>(
-  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
+export async function apiGet<T>(
   endpoint: string,
-  body?: unknown,
+  params?: Record<string, any>,
+  config?: AxiosRequestConfig,
 ): Promise<T> {
-  const url = `${BASE_URL}${endpoint}`;
+  const res = await api.get<ApiResponse<T>>(endpoint, { ...config, params });
+  return (res.data?.data !== undefined ? res.data.data : res.data) as T;
+}
 
-  const res = await fetch(url, {
+export async function apiGetPaginated<T>(
+  endpoint: string,
+  params?: Record<string, any>,
+  config?: AxiosRequestConfig,
+): Promise<PaginatedResponse<T>> {
+  const res = await api.get<PaginatedResponse<T>>(endpoint, { ...config, params });
+  return res.data;
+}
+
+export async function apiPost<T, B = unknown>(
+  endpoint: string,
+  body?: B,
+  config?: AxiosRequestConfig,
+): Promise<T> {
+  const res = await api.post<ApiResponse<T>>(endpoint, body, config);
+  return (res.data?.data !== undefined ? res.data.data : res.data) as T;
+}
+
+export async function apiPut<T, B = unknown>(
+  endpoint: string,
+  body?: B,
+  config?: AxiosRequestConfig,
+): Promise<T> {
+  const res = await api.put<ApiResponse<T>>(endpoint, body, config);
+  return (res.data?.data !== undefined ? res.data.data : res.data) as T;
+}
+
+export async function apiPatch<T, B = unknown>(
+  endpoint: string,
+  body?: B,
+  config?: AxiosRequestConfig,
+): Promise<T> {
+  const res = await api.patch<ApiResponse<T>>(endpoint, body, config);
+  return (res.data?.data !== undefined ? res.data.data : res.data) as T;
+}
+
+export async function apiDelete<T>(
+  endpoint: string,
+  config?: AxiosRequestConfig,
+): Promise<T> {
+  const res = await api.delete<ApiResponse<T>>(endpoint, config);
+  return (res.data?.data !== undefined ? res.data.data : res.data) as T;
+}
+
+export async function apiUpload<T>(
+  endpoint: string,
+  formData: FormData,
+  method: 'POST' | 'PATCH' = 'POST',
+): Promise<T> {
+  const res = await api.request<ApiResponse<T>>({
     method,
+    url: endpoint,
+    data: formData,
     headers: {
-      'Content-Type': 'application/json',
-      ...getAuthHeaders(),
+      'Content-Type': 'multipart/form-data',
     },
-    body: body !== undefined ? JSON.stringify(body) : undefined,
   });
-
-  if (res.status === 401) {
-    // TODO: redirect to /login and clear session
-    throw new Error('Unauthorized — please log in again.');
-  }
-
-  if (!res.ok) {
-    const message = await res.text().catch(() => res.statusText);
-    throw new Error(`API error ${res.status}: ${message}`);
-  }
-
-  // Handle 204 No Content
-  if (res.status === 204) return undefined as T;
-
-  return res.json() as Promise<T>;
+  return (res.data?.data !== undefined ? res.data.data : res.data) as T;
 }
 
-// ---------------------------------------------------------------------------
-// Public API
-// ---------------------------------------------------------------------------
-
-export function apiGet<T>(endpoint: string): Promise<T> {
-  return request<T>('GET', endpoint);
-}
-
-export function apiPost<T, B = unknown>(endpoint: string, body: B): Promise<T> {
-  return request<T>('POST', endpoint, body);
-}
-
-export function apiPut<T, B = unknown>(endpoint: string, body: B): Promise<T> {
-  return request<T>('PUT', endpoint, body);
-}
-
-export function apiPatch<T, B = unknown>(endpoint: string, body: B): Promise<T> {
-  return request<T>('PATCH', endpoint, body);
-}
-
-export function apiDelete<T>(endpoint: string): Promise<T> {
-  return request<T>('DELETE', endpoint);
-}
-
+export default api;

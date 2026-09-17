@@ -22,8 +22,10 @@ import {
   columns,
   type SubCategoryRecord,
 } from "@/lib/mock-data/attributes/sub-category.mock";
+import { useSubCategories } from "@/features/attributes/hooks/use-attributes";
 
 export default function SubCategoryPage() {
+  const { data = subCategoryData, isLoading, error, refetch } = useSubCategories();
   return (
     <TableProvider title="Sub Categories" entityName="Sub Category">
       <div className="min-h-20 w-full flex justify-between items-center bg-white shadow-sm rounded-xl">
@@ -52,10 +54,13 @@ export default function SubCategoryPage() {
 
       <div className="mt-4">
         <PaginatedTable<SubCategoryRecord>
-          data={subCategoryData}
+          data={data}
           columns={columns}
           minWidth="800px"
           actionsLabel="Action"
+          isLoading={isLoading}
+          error={error ? error.message : null}
+          onRetry={() => refetch()}
           renderActions={(row, notify) => (
             <ActionButtonGroup aria-label={`Actions for sub category ${row.id}`}>
               <ActionButton

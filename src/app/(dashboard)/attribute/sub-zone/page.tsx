@@ -22,8 +22,10 @@ import {
   columns,
   type SubZoneRecord,
 } from "@/lib/mock-data/attributes/sub-zone.mock";
+import { useSubZones } from "@/features/attributes/hooks/use-attributes";
 
 export default function SubZonePage() {
+  const { data = subZoneData, isLoading, error, refetch } = useSubZones();
   return (
     <TableProvider title="Sub Zones" entityName="Sub Zone">
       <div className="min-h-20 w-full flex justify-between items-center bg-white shadow-sm rounded-xl">
@@ -52,10 +54,13 @@ export default function SubZonePage() {
 
       <div className="mt-4">
         <PaginatedTable<SubZoneRecord>
-          data={subZoneData}
+          data={data}
           columns={columns}
           minWidth="800px"
           actionsLabel="Action"
+          isLoading={isLoading}
+          error={error ? error.message : null}
+          onRetry={() => refetch()}
           renderActions={(row, notify) => (
             <ActionButtonGroup aria-label={`Actions for sub zone ${row.id}`}>
               <ActionButton

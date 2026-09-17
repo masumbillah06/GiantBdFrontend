@@ -22,8 +22,10 @@ import {
   columns,
   type ZoneRecord,
 } from "@/lib/mock-data/attributes/zone.mock";
+import { useZones } from "@/features/attributes/hooks/use-attributes";
 
 export default function ZonePage() {
+  const { data = zoneData, isLoading, error, refetch } = useZones();
   return (
     <TableProvider title="Zones" entityName="Zone">
       <div className="min-h-20 w-full flex justify-between items-center bg-white shadow-sm rounded-xl">
@@ -52,10 +54,13 @@ export default function ZonePage() {
 
       <div className="mt-4">
         <PaginatedTable<ZoneRecord>
-          data={zoneData}
+          data={data}
           columns={columns}
           minWidth="1000px"
           actionsLabel="Action"
+          isLoading={isLoading}
+          error={error ? error.message : null}
+          onRetry={() => refetch()}
           renderActions={(row, notify) => (
             <ActionButtonGroup aria-label={`Actions for zone ${row.id}`}>
               <ActionButton

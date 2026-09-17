@@ -22,8 +22,10 @@ import {
   columns,
   type RackRecord,
 } from "@/lib/mock-data/attributes/rack.mock";
+import { useRacks } from "@/features/attributes/hooks/use-attributes";
 
 export default function RackPage() {
+  const { data = rackData, isLoading, error, refetch } = useRacks();
   return (
     <TableProvider title="Racks" entityName="Rack">
       <div className="min-h-20 w-full flex justify-between items-center bg-white shadow-sm rounded-xl">
@@ -52,10 +54,13 @@ export default function RackPage() {
 
       <div className="mt-4">
         <PaginatedTable<RackRecord>
-          data={rackData}
+          data={data}
           columns={columns}
           minWidth="800px"
           actionsLabel="Action"
+          isLoading={isLoading}
+          error={error ? error.message : null}
+          onRetry={() => refetch()}
           renderActions={(row, notify) => (
             <ActionButtonGroup aria-label={`Actions for rack ${row.id}`}>
               <ActionButton

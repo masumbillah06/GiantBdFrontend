@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useCallback } from "react";
 import type { FGProductItem } from "./basic-info";
 import type { DocumentItem } from "./documents";
+import { useCreateStockIn } from "../../hooks/use-stock-in";
 
 export interface StockInContextValue {
   products: FGProductItem[];
@@ -67,6 +68,7 @@ export function StockInProvider({ children }: { children: React.ReactNode }) {
   const [remarks, setRemarks] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const createStockInMut = useCreateStockIn();
 
   const resetForm = useCallback(() => {
     setProducts([createDefaultProduct(1)]);
@@ -78,24 +80,41 @@ export function StockInProvider({ children }: { children: React.ReactNode }) {
 
   const handleCreate = useCallback(() => {
     setIsLoading(true);
-    setStatusMessage("Saving stock in record...");
+    setStatusMessage("Saving stock in record to backend...");
 
-    // Simulated submission payload
+    const items = products.flatMap((p) =>
+      p.selectedSizes.map((size) => ({
+        size,
+        gender: (p.gender?.toUpperCase() || 'MALE') as any,
+        receivedQty: Number(p.productsPerPacket) || 10,
+        itemsPerPacket: Number(p.productsPerPacket) || 1,
+        locationId: 'default-location',
+      }))
+    );
+
     const payload = {
-      products,
-      documents,
-      remarks,
-      createdAt: new Date().toISOString(),
+      productionDate: new Date().toISOString(),
+      note: remarks,
+      items: items.length > 0 ? items : [{ receivedQty: 10, locationId: 'default-location' }],
     };
 
-    console.log("[Stock In Created]", payload);
-
-    setTimeout(() => {
-      setIsLoading(false);
-      setStatusMessage("Stock In record created successfully!");
-      setTimeout(() => setStatusMessage(null), 3000);
-    }, 600);
-  }, [products, documents, remarks]);
+    createStockInMut.mutate(
+      { payload },
+      {
+        onSuccess: () => {
+          setIsLoading(false);
+          setStatusMessage("Stock In record created successfully!");
+          setTimeout(() => setStatusMessage(null), 3000);
+          resetForm();
+        },
+        onError: (err: any) => {
+          setIsLoading(false);
+          setStatusMessage("Error creating Stock In: " + (err?.response?.data?.message || err.message));
+          setTimeout(() => setStatusMessage(null), 5000);
+        },
+      }
+    );
+  }, [products, documents, remarks, createStockInMut, resetForm]);
 
   const handlePreview = useCallback(() => {
     console.log("[Stock In Preview]", { products, documents, remarks });

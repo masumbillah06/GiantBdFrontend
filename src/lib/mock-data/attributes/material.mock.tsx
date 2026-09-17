@@ -51,10 +51,10 @@ export const columns: ColumnDef<MaterialRecord>[] = [
     render: (row) => (
       <span
         className={`font-medium capitalize ${
-          row.status.toLowerCase() === "active" ? "text-emerald-600" : "text-muted-foreground"
+          row.status?.toLowerCase() === "active" ? "text-emerald-600" : "text-muted-foreground"
         }`}
       >
-        {row.status}
+        {row.status ?? "active"}
       </span>
     ),
   },

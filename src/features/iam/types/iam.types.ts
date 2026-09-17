@@ -1,21 +1,27 @@
+import type { User, Role, Permission } from '@/features/auth/types/auth.types';
+
 export interface UserRecord {
-  id: number;
+  id: string | number;
   name: string;
   role: string;
   gender: string;
   phone: string;
   email: string;
   status: string;
+  avatar?: string | null;
+  raw?: User;
 }
 
 export interface RoleRecord {
-  id: number;
+  id: string | number;
   name: string;
   permission: number;
+  description?: string;
+  raw?: Role;
 }
 
 export interface PermissionRecord {
-  id: number;
+  id: string | number;
   moduleName: string;
   adjust: boolean;
   approve: boolean;
@@ -37,12 +43,38 @@ export interface PermissionRecord {
   update: boolean;
   variant: boolean;
   watch: boolean;
+  raw?: Permission;
 }
 
 export interface AuthUser {
-  id: number;
+  id: string | number;
   name: string;
   email: string;
   role: string;
   token?: string;
+}
+
+export function adaptUserToRecord(u: User): UserRecord {
+  return {
+    id: u.id,
+    name: u.name,
+    role: u.role?.name || 'User',
+    gender: u.gender ? u.gender.toLowerCase() : '-',
+    phone: u.phone || '-',
+    email: u.email,
+    status: u.status ? u.status.toLowerCase() : 'active',
+    avatar: u.avatar || u.image,
+    raw: u,
+  };
+}
+
+export function adaptRoleToRecord(r: Role): RoleRecord {
+  const permCount = r.permissions?.length || r.rolePermissions?.length || 0;
+  return {
+    id: r.id,
+    name: r.name,
+    permission: permCount,
+    description: r.description,
+    raw: r,
+  };
 }

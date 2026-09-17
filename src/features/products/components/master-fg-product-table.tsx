@@ -6,7 +6,7 @@ import { ActionButton } from "@/components/ui/buttons/action-button";
 import { ActionButtonGroup } from "@/components/ui/buttons/action-button-group";
 import type { ColumnDef } from "@/components/ui/table/ReusableTable.types";
 import type { MasterProduct } from "../types/product.types";
-import { useMasterProducts } from "../hooks/use-master-products";
+import { useMasterProducts, useMasterProductMutations } from "../hooks/use-master-products";
 
 export const masterProductColumns: ColumnDef<MasterProduct>[] = [
   { key: "masterProductName", label: "Master Product Name" },
@@ -45,7 +45,8 @@ export interface MasterFGProductTableProps {
 }
 
 export function MasterFGProductTable({ pageSize, searchValue, filters, onNotify }: MasterFGProductTableProps) {
-  const { data = [], isLoading, error, refetch } = useMasterProducts();
+  const { data = [], isLoading, error, refetch } = useMasterProducts({ search: searchValue, ...filters });
+  const { deleteMut } = useMasterProductMutations();
 
   return (
     <PaginatedTable<MasterProduct>
@@ -75,7 +76,13 @@ export function MasterFGProductTable({ pageSize, searchValue, filters, onNotify 
             label="Delete Product"
             icon={Trash2}
             variant="danger"
-            onClick={() => (onNotify || notify)(`Deleted product #${row.id}`)}
+            onClick={() => {
+              if (confirm(`Are you sure you want to delete ${row.masterProductName}?`)) {
+                deleteMut.mutate(String(row.id), {
+                  onSuccess: () => (onNotify || notify)(`Deleted product #${row.id}`),
+                });
+              }
+            }}
           />
         </ActionButtonGroup>
       )}

@@ -7,7 +7,7 @@ import { ActionButton } from "@/components/ui/buttons/action-button";
 import { Eye, PenSquareIcon, Trash2 } from "lucide-react";
 import type { ColumnDef } from "@/components/ui/table/ReusableTable.types";
 import type { CustomerRecord } from "../types/crm.types";
-import { useBuyers } from "../hooks/use-buyers";
+import { useBuyers, useBuyerMutations } from "../hooks/use-buyers";
 
 export const buyerColumns: ColumnDef<CustomerRecord>[] = [
   { key: "customerName", label: "Customer Name" },
@@ -23,7 +23,8 @@ export interface BuyerTableProps {
 }
 
 export function BuyerTable({ searchValue, pageSize, onNotify }: BuyerTableProps) {
-  const { data = [], isLoading, error, refetch } = useBuyers();
+  const { data = [], isLoading, error, refetch } = useBuyers({ search: searchValue });
+  const { deleteMut } = useBuyerMutations();
 
   const filteredData = useMemo(() => {
     if (!searchValue || !searchValue.trim()) return data;
@@ -61,7 +62,13 @@ export function BuyerTable({ searchValue, pageSize, onNotify }: BuyerTableProps)
             label="Delete Customer"
             icon={Trash2}
             variant="danger"
-            onClick={() => (onNotify || notify)(`Delete customer #${row.id}`)}
+            onClick={() => {
+              if (confirm(`Are you sure you want to delete ${row.customerName}?`)) {
+                deleteMut.mutate(String(row.id), {
+                  onSuccess: () => (onNotify || notify)(`Deleted customer #${row.id}`),
+                });
+              }
+            }}
           />
         </ActionButtonGroup>
       )}

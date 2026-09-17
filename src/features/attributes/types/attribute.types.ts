@@ -1,58 +1,124 @@
+import type { Status } from '@/features/auth/types/auth.types';
+
 export interface CategoryRecord {
-  id: number;
+  id: string | number;
   name: string;
-  description: string;
+  description?: string | null;
+  status?: Status | string;
+  _count?: {
+    masterProducts?: number;
+    subCategories?: number;
+  };
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface SubCategoryRecord {
-  id: number;
+  id: string | number;
   name: string;
-  category: string;
-  description: string;
-  status: string;
+  categoryId?: string;
+  category?: string | { id: string; name: string };
+  description?: string | null;
+  status?: Status | string;
+  _count?: {
+    masterProducts?: number;
+  };
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface MaterialRecord {
-  id: number;
+  id: string | number;
   name: string;
-  description: string;
-  status: string;
+  description?: string | null;
+  status?: Status | string;
+  _count?: {
+    masterProducts?: number;
+  };
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface ColorRecord {
-  id: number;
+  id: string | number;
   name: string;
-  description: string;
-  status: string;
+  code?: string | null; // Hex code e.g. #FF0000
+  description?: string | null;
+  status?: Status | string;
+  _count?: {
+    variantProducts?: number;
+  };
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface WarehouseRecord {
-  id: number;
+  id: string | number;
   name: string;
   code: string;
-  description: string;
+  description?: string | null;
+  status?: Status | string;
+  _count?: {
+    zones?: number;
+  };
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface ZoneRecord {
-  id: number;
+  id: string | number;
   name: string;
   code: string;
-  warehouse: string;
-  description: string;
+  warehouseId?: string;
+  warehouse?: string | { id: string; name: string; code: string };
+  description?: string | null;
+  status?: Status | string;
+  _count?: {
+    subZones?: number;
+  };
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface SubZoneRecord {
-  id: number;
+  id: string | number;
   name: string;
   code: string;
-  zone: string;
-  description: string;
+  zoneId?: string;
+  zone?: string | { id: string; name: string; code: string };
+  description?: string | null;
+  status?: Status | string;
+  _count?: {
+    racks?: number;
+  };
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface RackRecord {
-  id: number;
+  id: string | number;
   name: string;
   code: string;
-  subZone: string;
-  description: string;
+  subZoneId?: string;
+  subZone?: string | { id: string; name: string; code: string };
+  description?: string | null;
+  status?: Status | string;
+  _count?: {
+    storageLocations?: number;
+  };
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface StorageLocationRecord {
+  id: string | number;
+  code: string;
+  barcode?: string;
+  warehouseId?: string;
+  zoneId?: string;
+  subZoneId?: string;
+  rackId?: string;
+  status?: Status | string;
+  createdAt?: string;
+  updatedAt?: string;
 }

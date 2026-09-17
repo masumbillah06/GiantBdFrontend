@@ -22,8 +22,10 @@ import {
   columns,
   type WarehouseRecord,
 } from "@/lib/mock-data/attributes/warehouse.mock";
+import { useWarehouses } from "@/features/attributes/hooks/use-attributes";
 
 export default function WarehousePage() {
+  const { data = warehouseData, isLoading, error, refetch } = useWarehouses();
   return (
     <TableProvider title="Warehouses" entityName="Warehouse">
       <div className="min-h-20 w-full flex justify-between items-center bg-white shadow-sm rounded-xl">
@@ -52,10 +54,13 @@ export default function WarehousePage() {
 
       <div className="mt-4">
         <PaginatedTable<WarehouseRecord>
-          data={warehouseData}
+          data={data}
           columns={columns}
           minWidth="900px"
           actionsLabel="Action"
+          isLoading={isLoading}
+          error={error ? error.message : null}
+          onRetry={() => refetch()}
           renderActions={(row, notify) => (
             <ActionButtonGroup aria-label={`Actions for warehouse ${row.id}`}>
               <ActionButton

@@ -6,7 +6,7 @@ import { ActionButton } from "@/components/ui/buttons/action-button";
 import { ActionButtonGroup } from "@/components/ui/buttons/action-button-group";
 import type { ColumnDef } from "@/components/ui/table/ReusableTable.types";
 import type { UserRecord } from "../types/iam.types";
-import { useUsers } from "../hooks/use-iam";
+import { useUsers, useUserMutations } from "../hooks/use-iam";
 
 export const userColumns: ColumnDef<UserRecord>[] = [
   { key: "name", label: "Name" },
@@ -30,7 +30,8 @@ export interface UserTableProps {
 }
 
 export function UserTable({ pageSize, searchValue, onNotify }: UserTableProps) {
-  const { data = [], isLoading, error, refetch } = useUsers();
+  const { data = [], isLoading, error, refetch } = useUsers({ search: searchValue });
+  const { deleteMut } = useUserMutations();
 
   return (
     <PaginatedTable<UserRecord>
@@ -59,7 +60,13 @@ export function UserTable({ pageSize, searchValue, onNotify }: UserTableProps) {
             label="Delete User"
             icon={Trash2}
             variant="danger"
-            onClick={() => (onNotify || notify)(`Deleted user #${row.id}`)}
+            onClick={() => {
+              if (confirm(`Are you sure you want to delete ${row.name}?`)) {
+                deleteMut.mutate(String(row.id), {
+                  onSuccess: () => (onNotify || notify)(`Deleted user #${row.id}`),
+                });
+              }
+            }}
           />
         </ActionButtonGroup>
       )}

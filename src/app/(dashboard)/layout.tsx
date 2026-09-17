@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Footer from "@/components/layout/footer";
 import Header from "@/components/layout/header";
@@ -8,6 +8,7 @@ import { Sidebar, type SidebarUser } from "@/components/layout/sidebar";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth.store";
 import { logout as authLogout } from "@/features/auth/services/auth.service";
+import { isClientAuthenticated } from "@/lib/auth/session";
 
 export const DEFAULT_SIDEBAR_USER: SidebarUser = {
   name: "System Administrator",
@@ -28,6 +29,13 @@ export function DashboardShell({
   const router = useRouter();
   const authUser = useAuthStore((s) => s.user);
   const clearAuth = useAuthStore((s) => s.logout);
+
+  useEffect(() => {
+    if (!user && !isClientAuthenticated()) {
+      clearAuth();
+      router.replace("/login");
+    }
+  }, [user, router, clearAuth]);
 
   const activeUser: SidebarUser = useMemo(() => {
     if (user) return user;

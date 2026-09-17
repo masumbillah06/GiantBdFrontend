@@ -11,22 +11,39 @@ import { AUTH_TOKEN_KEY } from "@/lib/auth/session";
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Allow public assets, internal Next.js paths, favicon, and login
+  // Allow static assets, Next.js internals, API routes, and public files
   if (
     pathname.startsWith("/_next") ||
     pathname.startsWith("/api") ||
-    pathname === "/login" ||
-    pathname === "/" ||
     pathname.includes(".")
   ) {
     return NextResponse.next();
   }
 
-  // Route protection — checks token when ENABLE_AUTH_GUARD is set
   const token = request.cookies.get(AUTH_TOKEN_KEY)?.value;
-  const isAuthGuardActive = process.env.ENABLE_AUTH_GUARD === "true";
+  const isAuthGuardDisabled = process.env.DISABLE_AUTH_GUARD === "true";
 
-  if (isAuthGuardActive && !token) {
+  // If user is already authenticated
+  if (token) {
+    // Prevent authenticated users from seeing /login or root landing page
+    if (pathname === "/login" || pathname === "/") {
+      const from = request.nextUrl.searchParams.get("from") || "/inventory/dashboard";
+      return NextResponse.redirect(new URL(from, request.url));
+    }
+    return NextResponse.next();
+  }
+
+  // If user is NOT authenticated
+  if (pathname === "/login") {
+    return NextResponse.next();
+  }
+
+  if (pathname === "/") {
+    return NextResponse.redirect(new URL("/login", request.url));
+  }
+
+  // Protect all other routes unless explicitly disabled
+  if (!isAuthGuardDisabled) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("from", pathname);
     return NextResponse.redirect(loginUrl);

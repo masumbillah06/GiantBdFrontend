@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { AlertCircle, Eye, EyeOff, Loader2 } from "lucide-react";
 import { useLogin } from "../hooks/use-auth";
@@ -18,6 +18,7 @@ export function LoginForm({ onForgotPassword }: LoginFormProps) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const router = useRouter();
+  const searchParams = useSearchParams();
   const loginMutation = useLogin();
   const setAuth = useAuthStore((s) => s.setAuth);
 
@@ -31,7 +32,8 @@ export function LoginForm({ onForgotPassword }: LoginFormProps) {
         onSuccess: (res) => {
           if (res.user && res.accessToken) {
             setAuth(res.user, res.accessToken);
-            router.push("/inventory/dashboard");
+            const from = searchParams.get("from") || "/inventory/dashboard";
+            router.push(from);
           } else {
             setErrorMessage("Unexpected login response from server");
           }

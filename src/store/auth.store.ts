@@ -99,6 +99,14 @@ export const useAuthStore = create<AuthState>()(
         isAuthenticated: state.isAuthenticated,
         accessToken: state.accessToken,
       }),
+      onRehydrateStorage: () => (state) => {
+        if (state?.accessToken) {
+          setClientToken(state.accessToken);
+        }
+        if (state?.user) {
+          setClientUser(state.user);
+        }
+      },
     },
   ),
 );

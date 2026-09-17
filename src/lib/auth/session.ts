@@ -7,23 +7,33 @@ export const USER_INFO_KEY = "giantbd_user";
 
 export function getClientToken(): string | null {
   if (typeof window === "undefined") return null;
-  // Check cookie first
-  const cookieMatch = document.cookie.match(new RegExp(`(^| )${AUTH_TOKEN_KEY}=([^;]+)`));
-  if (cookieMatch) return decodeURIComponent(cookieMatch[2]);
-  // Fallback to localStorage
-  return localStorage.getItem(AUTH_TOKEN_KEY);
+  // Check cookie first with robust regex supporting optional whitespace
+  const cookieMatch = document.cookie.match(
+    new RegExp(`(?:^|;\\s*)${AUTH_TOKEN_KEY}=([^;]*)`)
+  );
+  if (cookieMatch && cookieMatch[1]) {
+    return decodeURIComponent(cookieMatch[1]);
+  }
+  // Fallback to localStorage and re-sync cookie if missing
+  const localToken = localStorage.getItem(AUTH_TOKEN_KEY);
+  if (localToken) {
+    setClientToken(localToken);
+    return localToken;
+  }
+  return null;
 }
 
 export function setClientToken(token: string, days = 7): void {
   if (typeof window === "undefined") return;
+  const maxAge = days * 86400; // seconds
   const expires = new Date(Date.now() + days * 864e5).toUTCString();
-  document.cookie = `${AUTH_TOKEN_KEY}=${encodeURIComponent(token)}; expires=${expires}; path=/; SameSite=Lax`;
+  document.cookie = `${AUTH_TOKEN_KEY}=${encodeURIComponent(token)}; max-age=${maxAge}; expires=${expires}; path=/; SameSite=Lax`;
   localStorage.setItem(AUTH_TOKEN_KEY, token);
 }
 
 export function removeClientToken(): void {
   if (typeof window === "undefined") return;
-  document.cookie = `${AUTH_TOKEN_KEY}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
+  document.cookie = `${AUTH_TOKEN_KEY}=; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Lax`;
   localStorage.removeItem(AUTH_TOKEN_KEY);
   localStorage.removeItem(USER_INFO_KEY);
 }

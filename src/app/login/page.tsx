@@ -1,11 +1,33 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { LoginForm } from "@/features/auth/components/login-form";
 import { ForgotPasswordForm } from "@/features/auth/components/forgot-password-form";
+import { isClientAuthenticated } from "@/lib/auth/session";
 
-export default function LoginPage() {
+function LoginContent() {
   const [forgotPassword, setForgotPassword] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (isClientAuthenticated()) {
+      const from = searchParams.get("from") || "/inventory/dashboard";
+      router.replace(from);
+    } else {
+      setIsCheckingAuth(false);
+    }
+  }, [router, searchParams]);
+
+  if (isCheckingAuth) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-slate-100 p-6">
+        <div className="h-10 w-10 animate-spin rounded-full border-3 border-[#476ab8] border-t-transparent" />
+      </main>
+    );
+  }
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-100 p-6">
@@ -53,7 +75,7 @@ export default function LoginPage() {
         {/* Forgot Password Panel */}
         <div
           className={`
-            absolute left-0 top-0 z-10
+            absolute right-0 top-0 z-10
             flex h-full w-1/2
             items-center justify-center
             bg-white
@@ -65,5 +87,19 @@ export default function LoginPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="flex min-h-screen items-center justify-center bg-slate-100 p-6">
+          <div className="h-10 w-10 animate-spin rounded-full border-3 border-[#476ab8] border-t-transparent" />
+        </main>
+      }
+    >
+      <LoginContent />
+    </Suspense>
   );
 }

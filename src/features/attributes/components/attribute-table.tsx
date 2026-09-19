@@ -17,6 +17,7 @@ export interface AttributeTableProps<T extends RowBase> {
   error?: string | null;
   onRetry?: () => void;
   onNotify?: (msg: string) => void;
+  onDelete?: (id: string | number, row: T) => void;
   minWidth?: string;
 }
 
@@ -30,6 +31,7 @@ export function AttributeTable<T extends RowBase>({
   error = null,
   onRetry,
   onNotify,
+  onDelete,
   minWidth = "800px",
 }: AttributeTableProps<T>) {
   const filteredData = useMemo(() => {
@@ -68,7 +70,16 @@ export function AttributeTable<T extends RowBase>({
             label={`Delete ${entityName}`}
             icon={Trash2}
             variant="danger"
-            onClick={() => (onNotify || notify)(`Deleted ${entityName} #${row.id}`)}
+            onClick={() => {
+              const labelName = (row as any).name ? `"${(row as any).name}"` : `#${row.id}`;
+              if (confirm(`Are you sure you want to delete ${entityName} ${labelName}?`)) {
+                if (onDelete && row.id !== undefined) {
+                  onDelete(row.id, row);
+                } else {
+                  (onNotify || notify)(`Deleted ${entityName} #${row.id}`);
+                }
+              }
+            }}
           />
         </ActionButtonGroup>
       )}

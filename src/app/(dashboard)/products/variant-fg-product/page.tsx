@@ -56,7 +56,11 @@ const VARIANT_PRODUCT_FILTER_FIELDS: FilterCardField[] = [
 
 export default function VariantFGProductPage() {
   return (
-    <TableProvider title="Variant FG Products" entityName="Variant Product">
+    <TableProvider
+      title="Variant FG Products"
+      entityName="Variant Product"
+      newHref="/products/variant-fg-product/new"
+    >
       {/* ── Breadcrumb Bar with Table Toolbar ── */}
       <div className="min-h-20 w-full flex justify-between items-center bg-white shadow-sm rounded-xl">
         <div>

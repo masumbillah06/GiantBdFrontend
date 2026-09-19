@@ -22,10 +22,11 @@ import {
   columns,
   type WarehouseRecord,
 } from "@/lib/mock-data/attributes/warehouse.mock";
-import { useWarehouses } from "@/features/attributes/hooks/use-attributes";
+import { useWarehouses, useWarehouseMutations } from "@/features/attributes/hooks/use-attributes";
 
 export default function WarehousePage() {
   const { data = warehouseData, isLoading, error, refetch } = useWarehouses();
+  const { deleteMut } = useWarehouseMutations();
   return (
     <TableProvider title="Warehouses" entityName="Warehouse" newHref="/attribute/warehouse/new">
       <div className="min-h-20 w-full flex justify-between items-center bg-white shadow-sm rounded-xl">
@@ -77,7 +78,14 @@ export default function WarehousePage() {
                 label="Delete Warehouse"
                 icon={Trash2}
                 variant="danger"
-                onClick={() => notify(`Deleted warehouse #${row.id}`)}
+                onClick={() => {
+                  if (confirm(`Are you sure you want to delete warehouse "${row.name}"?`)) {
+                    deleteMut.mutate(String(row.id), {
+                      onSuccess: () => notify(`Deleted warehouse #${row.id}`),
+                      onError: (err: any) => notify(err?.response?.data?.message || `Failed to delete warehouse`),
+                    });
+                  }
+                }}
               />
             </ActionButtonGroup>
           )}

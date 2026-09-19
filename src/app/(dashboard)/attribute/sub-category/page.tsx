@@ -22,10 +22,11 @@ import {
   columns,
   type SubCategoryRecord,
 } from "@/lib/mock-data/attributes/sub-category.mock";
-import { useSubCategories } from "@/features/attributes/hooks/use-attributes";
+import { useSubCategories, useSubCategoryMutations } from "@/features/attributes/hooks/use-attributes";
 
 export default function SubCategoryPage() {
   const { data = subCategoryData, isLoading, error, refetch } = useSubCategories();
+  const { deleteMut } = useSubCategoryMutations();
   return (
     <TableProvider title="Sub Categories" entityName="Sub Category" newHref="/attribute/sub-category/new">
       <div className="min-h-20 w-full flex justify-between items-center bg-white shadow-sm rounded-xl">
@@ -77,7 +78,14 @@ export default function SubCategoryPage() {
                 label="Delete Sub Category"
                 icon={Trash2}
                 variant="danger"
-                onClick={() => notify(`Deleted sub category #${row.id}`)}
+                onClick={() => {
+                  if (confirm(`Are you sure you want to delete sub category "${row.name}"?`)) {
+                    deleteMut.mutate(String(row.id), {
+                      onSuccess: () => notify(`Deleted sub category #${row.id}`),
+                      onError: (err: any) => notify(err?.response?.data?.message || `Failed to delete sub category`),
+                    });
+                  }
+                }}
               />
             </ActionButtonGroup>
           )}

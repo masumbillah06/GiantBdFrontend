@@ -32,7 +32,11 @@ const MASTER_PRODUCT_FILTER_FIELDS: FilterCardField[] = [
 
 export default function MasterFGProductPage() {
   return (
-    <TableProvider title="Master FG Products" entityName="Master Product">
+    <TableProvider
+      title="Master FG Products"
+      entityName="Master Product"
+      newHref="/products/master-fg-product/new"
+    >
       {/* ── Breadcrumb Bar with Table Toolbar ── */}
       <div className="min-h-20 w-full flex justify-between items-center bg-white shadow-sm rounded-xl">
         <div>

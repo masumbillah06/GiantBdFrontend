@@ -13,6 +13,10 @@ import {
   getRoles,
   getRawRoles,
   getRoleById,
+  createRole,
+  updateRole,
+  deleteRole,
+  restoreRole,
   getPermissions,
 } from "../services/iam.service";
 import type { UserRecord, RoleRecord, PermissionRecord } from "../types/iam.types";
@@ -98,6 +102,49 @@ export function useRoleDetail(id: string) {
     queryFn: () => getRoleById(id),
     enabled: Boolean(id),
   });
+}
+
+export function useRoleMutations() {
+  const queryClient = useQueryClient();
+
+  const createMut = useMutation({
+    mutationFn: (data: {
+      name: string;
+      description?: string;
+      isTwoFactorRequired?: boolean;
+      permissionIds?: string[];
+    }) => createRole(data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["iam", "roles"] }),
+  });
+
+  const updateMut = useMutation({
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: {
+        name?: string;
+        description?: string;
+        isTwoFactorRequired?: boolean;
+        status?: string;
+        permissionIds?: string[];
+      };
+    }) => updateRole(id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["iam", "roles"] }),
+  });
+
+  const deleteMut = useMutation({
+    mutationFn: (id: string) => deleteRole(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["iam", "roles"] }),
+  });
+
+  const restoreMut = useMutation({
+    mutationFn: (id: string) => restoreRole(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["iam", "roles"] }),
+  });
+
+  return { createMut, updateMut, deleteMut, restoreMut };
 }
 
 export function usePermissions() {

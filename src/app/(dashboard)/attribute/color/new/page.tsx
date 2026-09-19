@@ -52,17 +52,19 @@ export default function NewColorPage() {
         name: name.trim(),
         code: code.trim() || undefined,
         description: description.trim() || undefined,
-        status: status || "Active",
       },
       {
         onSuccess: () => {
           router.push("/attribute/color");
         },
-        onError: (err: unknown) => {
-          const message =
-            err instanceof Error
-              ? err.message
-              : "Failed to create color. Please try again.";
+        onError: (err: any) => {
+          const resData = err?.response?.data;
+          let message = "Failed to create color. Please try again.";
+          if (resData?.message) {
+            message = Array.isArray(resData.message) ? resData.message.join(", ") : resData.message;
+          } else if (err?.message) {
+            message = err.message;
+          }
           setServerError(message);
         },
       }

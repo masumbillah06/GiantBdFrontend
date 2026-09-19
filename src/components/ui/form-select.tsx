@@ -1,7 +1,7 @@
 "use client";
 
 import React, { forwardRef } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface FormSelectOption {
@@ -18,6 +18,7 @@ export interface FormSelectProps
   options?: FormSelectOption[];
   placeholder?: string;
   wrapperClassName?: string;
+  chevronType?: "down" | "updown";
 }
 
 export const FormSelect = forwardRef<HTMLSelectElement, FormSelectProps>(
@@ -36,6 +37,7 @@ export const FormSelect = forwardRef<HTMLSelectElement, FormSelectProps>(
       wrapperClassName,
       disabled,
       value,
+      chevronType = "down",
       ...props
     },
     ref
@@ -90,11 +92,19 @@ export const FormSelect = forwardRef<HTMLSelectElement, FormSelectProps>(
                 ))
               : children}
           </select>
-          <ChevronDown
-            size={16}
-            className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400"
-            aria-hidden="true"
-          />
+          {chevronType === "updown" ? (
+            <ChevronsUpDown
+              size={16}
+              className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+              aria-hidden="true"
+            />
+          ) : (
+            <ChevronDown
+              size={16}
+              className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+              aria-hidden="true"
+            />
+          )}
         </div>
 
         {error ? (

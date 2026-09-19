@@ -179,3 +179,11 @@ export interface CreateRackInput {
   description?: string;
   status?: string;
 }
+
+export interface CreateBulkRacksInput {
+  subZoneId: string;
+  count: number;
+  prefix?: string;
+  codePrefix?: string;
+  startIndex?: number;
+}

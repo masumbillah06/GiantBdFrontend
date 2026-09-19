@@ -6,7 +6,7 @@ import { ActionButton } from "@/components/ui/buttons/action-button";
 import { ActionButtonGroup } from "@/components/ui/buttons/action-button-group";
 import type { ColumnDef } from "@/components/ui/table/ReusableTable.types";
 import type { RoleRecord } from "../types/iam.types";
-import { useRoles } from "../hooks/use-iam";
+import { useRoles, useRoleMutations } from "../hooks/use-iam";
 
 export const roleColumns: ColumnDef<RoleRecord>[] = [
   { key: "name", label: "Name" },
@@ -21,6 +21,7 @@ export interface RoleTableProps {
 
 export function RoleTable({ pageSize, searchValue, onNotify }: RoleTableProps) {
   const { data = [], isLoading, error, refetch } = useRoles({ search: searchValue });
+  const { deleteMut } = useRoleMutations();
 
   return (
     <PaginatedTable<RoleRecord>
@@ -49,7 +50,13 @@ export function RoleTable({ pageSize, searchValue, onNotify }: RoleTableProps) {
             label="Delete Role"
             icon={Trash2}
             variant="danger"
-            onClick={() => (onNotify || notify)(`Deleted role #${row.id}`)}
+            onClick={() => {
+              if (confirm(`Are you sure you want to delete role "${row.name}"?`)) {
+                deleteMut.mutate(String(row.id), {
+                  onSuccess: () => (onNotify || notify)(`Deleted role #${row.id}`),
+                });
+              }
+            }}
           />
         </ActionButtonGroup>
       )}

@@ -52,6 +52,8 @@ export interface LoginResponse {
   accessToken?: string;
   require2FA?: boolean;
   tempToken?: string;
+  message?: string;
+  email?: string;
 }
 
 export interface VerifyOtpRequest {

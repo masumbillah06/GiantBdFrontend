@@ -74,17 +74,19 @@ export default function NewSubZonePage() {
         code: code.trim(),
         zoneId,
         description: description.trim() || undefined,
-        status: status || "Active",
       },
       {
         onSuccess: () => {
           router.push("/attribute/sub-zone");
         },
-        onError: (err: unknown) => {
-          const message =
-            err instanceof Error
-              ? err.message
-              : "Failed to create sub zone. Please try again.";
+        onError: (err: any) => {
+          const resData = err?.response?.data;
+          let message = "Failed to create sub zone. Please try again.";
+          if (resData?.message) {
+            message = Array.isArray(resData.message) ? resData.message.join(", ") : resData.message;
+          } else if (err?.message) {
+            message = err.message;
+          }
           setServerError(message);
         },
       }

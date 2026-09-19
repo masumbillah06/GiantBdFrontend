@@ -6,7 +6,7 @@ import { ActionButton } from "@/components/ui/buttons/action-button";
 import { ActionButtonGroup } from "@/components/ui/buttons/action-button-group";
 import type { ColumnDef } from "@/components/ui/table/ReusableTable.types";
 import type { VariantProduct } from "../types/product.types";
-import { useVariantProducts } from "../hooks/use-master-products";
+import { useVariantProducts, useVariantMutations } from "../hooks/use-master-products";
 
 export const variantProductColumns: ColumnDef<VariantProduct>[] = [
   {
@@ -65,6 +65,7 @@ export interface VariantFGProductTableProps {
 
 export function VariantFGProductTable({ pageSize, searchValue, filters, onNotify }: VariantFGProductTableProps) {
   const { data = [], isLoading, error, refetch } = useVariantProducts({ search: searchValue, ...filters });
+  const { deleteMut } = useVariantMutations();
 
   return (
     <PaginatedTable<VariantProduct>
@@ -94,7 +95,13 @@ export function VariantFGProductTable({ pageSize, searchValue, filters, onNotify
             label="Delete Product"
             icon={Trash2}
             variant="danger"
-            onClick={() => (onNotify || notify)(`Deleted variant #${row.id}`)}
+            onClick={() => {
+              if (confirm(`Are you sure you want to delete variant SKU ${row.sku || row.id}?`)) {
+                deleteMut.mutate(String(row.id), {
+                  onSuccess: () => (onNotify || notify)(`Deleted variant #${row.id}`),
+                });
+              }
+            }}
           />
         </ActionButtonGroup>
       )}

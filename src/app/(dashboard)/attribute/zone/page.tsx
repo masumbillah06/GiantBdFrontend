@@ -22,10 +22,11 @@ import {
   columns,
   type ZoneRecord,
 } from "@/lib/mock-data/attributes/zone.mock";
-import { useZones } from "@/features/attributes/hooks/use-attributes";
+import { useZones, useZoneMutations } from "@/features/attributes/hooks/use-attributes";
 
 export default function ZonePage() {
   const { data = zoneData, isLoading, error, refetch } = useZones();
+  const { deleteMut } = useZoneMutations();
   return (
     <TableProvider title="Zones" entityName="Zone" newHref="/attribute/zone/new">
       <div className="min-h-20 w-full flex justify-between items-center bg-white shadow-sm rounded-xl">
@@ -77,7 +78,14 @@ export default function ZonePage() {
                 label="Delete Zone"
                 icon={Trash2}
                 variant="danger"
-                onClick={() => notify(`Deleted zone #${row.id}`)}
+                onClick={() => {
+                  if (confirm(`Are you sure you want to delete zone "${row.name}"?`)) {
+                    deleteMut.mutate(String(row.id), {
+                      onSuccess: () => notify(`Deleted zone #${row.id}`),
+                      onError: (err: any) => notify(err?.response?.data?.message || `Failed to delete zone`),
+                    });
+                  }
+                }}
               />
             </ActionButtonGroup>
           )}

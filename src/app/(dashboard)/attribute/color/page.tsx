@@ -22,10 +22,11 @@ import {
   columns,
   type ColorRecord,
 } from "@/lib/mock-data/attributes/color.mock";
-import { useColors } from "@/features/attributes/hooks/use-attributes";
+import { useColors, useColorMutations } from "@/features/attributes/hooks/use-attributes";
 
 export default function ColorPage() {
   const { data = colorData, isLoading, error, refetch } = useColors();
+  const { deleteMut } = useColorMutations();
   return (
     <TableProvider title="Colors" entityName="Color" newHref="/attribute/color/new">
       <div className="min-h-20 w-full flex justify-between items-center bg-white shadow-sm rounded-xl">
@@ -77,7 +78,14 @@ export default function ColorPage() {
                 label="Delete Color"
                 icon={Trash2}
                 variant="danger"
-                onClick={() => notify(`Deleted color #${row.id}`)}
+                onClick={() => {
+                  if (confirm(`Are you sure you want to delete color "${row.name}"?`)) {
+                    deleteMut.mutate(String(row.id), {
+                      onSuccess: () => notify(`Deleted color #${row.id}`),
+                      onError: (err: any) => notify(err?.response?.data?.message || `Failed to delete color`),
+                    });
+                  }
+                }}
               />
             </ActionButtonGroup>
           )}

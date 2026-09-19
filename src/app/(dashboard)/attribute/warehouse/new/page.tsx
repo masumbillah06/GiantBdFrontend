@@ -55,17 +55,19 @@ export default function NewWarehousePage() {
         name: name.trim(),
         code: code.trim(),
         description: description.trim() || undefined,
-        status: status || "Active",
       },
       {
         onSuccess: () => {
           router.push("/attribute/warehouse");
         },
-        onError: (err: unknown) => {
-          const message =
-            err instanceof Error
-              ? err.message
-              : "Failed to create warehouse. Please try again.";
+        onError: (err: any) => {
+          const resData = err?.response?.data;
+          let message = "Failed to create warehouse. Please try again.";
+          if (resData?.message) {
+            message = Array.isArray(resData.message) ? resData.message.join(", ") : resData.message;
+          } else if (err?.message) {
+            message = err.message;
+          }
           setServerError(message);
         },
       }

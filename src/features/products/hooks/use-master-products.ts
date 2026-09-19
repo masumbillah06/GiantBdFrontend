@@ -9,8 +9,11 @@ import {
   createMasterProduct,
   updateMasterProduct,
   deleteMasterProduct,
+  restoreMasterProduct,
   createVariant,
   bulkCreateVariants,
+  deleteVariant,
+  restoreVariant,
   uploadVariantPicture,
 } from "../services/products.service";
 import type {
@@ -75,7 +78,14 @@ export function useMasterProductMutations() {
     },
   });
 
-  return { createMut, updateMut, deleteMut };
+  const restoreMut = useMutation({
+    mutationFn: (id: string) => restoreMasterProduct(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["products", "master"] });
+    },
+  });
+
+  return { createMut, updateMut, deleteMut, restoreMut };
 }
 
 export function useVariantMutations() {
@@ -95,6 +105,20 @@ export function useVariantMutations() {
     },
   });
 
+  const deleteMut = useMutation({
+    mutationFn: (id: string) => deleteVariant(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["products", "variants"] });
+    },
+  });
+
+  const restoreMut = useMutation({
+    mutationFn: (id: string) => restoreVariant(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["products", "variants"] });
+    },
+  });
+
   const uploadPicMut = useMutation({
     mutationFn: ({ id, file }: { id: string; file: File }) =>
       uploadVariantPicture(id, file),
@@ -103,5 +127,5 @@ export function useVariantMutations() {
     },
   });
 
-  return { createMut, bulkCreateMut, uploadPicMut };
+  return { createMut, bulkCreateMut, deleteMut, restoreMut, uploadPicMut };
 }

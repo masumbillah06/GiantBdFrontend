@@ -40,9 +40,29 @@ export async function registerUser(formData: FormData): Promise<User> {
 
 export async function updateUser(
   id: string,
-  data: { name?: string; phone?: string; gender?: string; roleId?: string; status?: string }
+  data: {
+    name?: string;
+    email?: string;
+    phone?: string;
+    gender?: any;
+    roleId?: string;
+    password?: string;
+    image?: string;
+    signature?: string;
+    isTwoFactorEnabled?: boolean;
+  }
 ): Promise<User> {
-  return apiPatch<User>(API.users.byId(id), data);
+  const payload: any = {};
+  if (data.name !== undefined) payload.name = data.name;
+  if (data.email !== undefined) payload.email = data.email;
+  if (data.phone !== undefined) payload.phone = data.phone;
+  if (data.gender !== undefined) payload.gender = data.gender;
+  if (data.roleId !== undefined) payload.roleId = data.roleId;
+  if (data.password !== undefined) payload.password = data.password;
+  if (data.image !== undefined) payload.image = data.image;
+  if (data.signature !== undefined) payload.signature = data.signature;
+  if (data.isTwoFactorEnabled !== undefined) payload.isTwoFactorEnabled = data.isTwoFactorEnabled;
+  return apiPatch<User>(API.users.byId(id), payload);
 }
 
 export async function deleteUser(id: string): Promise<void> {
@@ -83,6 +103,46 @@ export async function getRawRoles(params?: Record<string, any>): Promise<Role[]>
 
 export async function getRoleById(id: string): Promise<Role> {
   return apiGet<Role>(API.roles.byId(id));
+}
+
+export async function createRole(data: {
+  name: string;
+  description?: string;
+  isTwoFactorRequired?: boolean;
+  permissionIds?: string[];
+}): Promise<Role> {
+  const payload: any = { name: data.name };
+  if (data.description !== undefined) payload.description = data.description;
+  if (data.isTwoFactorRequired !== undefined) payload.isTwoFactorRequired = Boolean(data.isTwoFactorRequired);
+  if (data.permissionIds && data.permissionIds.length > 0) payload.permissionIds = data.permissionIds;
+  return apiPost<Role>(API.roles.create, payload);
+}
+
+export async function updateRole(
+  id: string,
+  data: {
+    name?: string;
+    description?: string;
+    isTwoFactorRequired?: boolean;
+    status?: string;
+    permissionIds?: string[];
+  }
+): Promise<Role> {
+  const payload: any = {};
+  if (data.name !== undefined) payload.name = data.name;
+  if (data.description !== undefined) payload.description = data.description;
+  if (data.isTwoFactorRequired !== undefined) payload.isTwoFactorRequired = Boolean(data.isTwoFactorRequired);
+  if (data.status !== undefined) payload.status = data.status;
+  if (data.permissionIds !== undefined) payload.permissionIds = data.permissionIds;
+  return apiPatch<Role>(API.roles.byId(id), payload);
+}
+
+export async function deleteRole(id: string): Promise<void> {
+  return apiDelete(API.roles.byId(id));
+}
+
+export async function restoreRole(id: string): Promise<Role> {
+  return apiPost<Role>(API.roles.restore(id));
 }
 
 // Permissions

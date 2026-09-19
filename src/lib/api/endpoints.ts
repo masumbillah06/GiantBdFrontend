@@ -9,6 +9,7 @@ export const API = {
   auth: {
     login: '/auth/login',
     verifyOtp: '/auth/verify-otp',
+    resendOtp: '/auth/resend-otp',
     refresh: '/auth/refresh',
     logout: '/auth/logout',
     changePassword: '/auth/change-password',
@@ -26,17 +27,21 @@ export const API = {
 
   roles: {
     list: '/roles',
+    create: '/roles',
     byId: (id: string) => `/roles/${id}`,
+    restore: (id: string) => `/roles/${id}/restore`,
   },
 
   permissions: {
     list: '/permissions',
     byId: (id: string) => `/permissions/${id}`,
+    seed: '/permissions/seed',
   },
 
   attributes: {
     categories: '/attributes/categories',
     categoryById: (id: string) => `/attributes/categories/${id}`,
+    categoryRestore: (id: string) => `/attributes/categories/${id}/restore`,
     subCategories: '/attributes/subcategories',
     subCategoryById: (id: string) => `/attributes/subcategories/${id}`,
     materials: '/attributes/materials',
@@ -51,6 +56,7 @@ export const API = {
     subZoneById: (id: string) => `/attributes/subzones/${id}`,
     racks: '/attributes/racks',
     rackById: (id: string) => `/attributes/racks/${id}`,
+    racksBulk: '/attributes/racks/bulk',
     locations: '/attributes/locations',
     locationById: (id: string) => `/attributes/locations/${id}`,
     locationByBarcode: (code: string) => `/attributes/locations/barcode/${code}`,
@@ -64,6 +70,7 @@ export const API = {
     variantById: (id: string) => `/variants/${id}`,
     variantBulk: '/variants/bulk',
     variantPicture: (id: string) => `/variants/${id}/picture`,
+    variantRestore: (id: string) => `/variants/${id}/restore`,
   },
 
   crm: {
@@ -72,9 +79,11 @@ export const API = {
     buyerRestore: (id: string) => `/buyers/${id}/restore`,
     lc: '/lc',
     lcById: (id: string) => `/lc/${id}`,
+    lcRestore: (id: string) => `/lc/${id}/restore`,
     po: '/po',
     poById: (id: string) => `/po/${id}`,
     poItems: (id: string) => `/po/${id}/items`,
+    poRestore: (id: string) => `/po/${id}/restore`,
   },
 
   inventory: {

@@ -22,10 +22,11 @@ import {
   columns,
   type CategoryRecord,
 } from "@/lib/mock-data/attributes/category.mock";
-import { useCategories } from "@/features/attributes/hooks/use-attributes";
+import { useCategories, useCategoryMutations } from "@/features/attributes/hooks/use-attributes";
 
 export default function CategoryPage() {
   const { data = categoryData, isLoading, error, refetch } = useCategories();
+  const { deleteMut } = useCategoryMutations();
   return (
     <TableProvider title="Categories" entityName="Category" newHref="/attribute/category/new">
       <div className="min-h-20 w-full flex justify-between items-center bg-white shadow-sm rounded-xl">
@@ -77,7 +78,14 @@ export default function CategoryPage() {
                 label="Delete Category"
                 icon={Trash2}
                 variant="danger"
-                onClick={() => notify(`Deleted category #${row.id}`)}
+                onClick={() => {
+                  if (confirm(`Are you sure you want to delete category "${row.name}"?`)) {
+                    deleteMut.mutate(String(row.id), {
+                      onSuccess: () => notify(`Deleted category #${row.id}`),
+                      onError: (err: any) => notify(err?.response?.data?.message || `Failed to delete category`),
+                    });
+                  }
+                }}
               />
             </ActionButtonGroup>
           )}

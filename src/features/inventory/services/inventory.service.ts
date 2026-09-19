@@ -32,6 +32,48 @@ export async function getBatchById(id: string): Promise<BackendBatch> {
   return apiGet<BackendBatch>(API.inventory.batchById(id));
 }
 
+export async function updateBatch(
+  id: string,
+  dto: {
+    batch_number?: string;
+    productionDate?: string;
+    expirationDate?: string;
+    poId?: string;
+  }
+): Promise<BackendBatch> {
+  const payload: any = {};
+  if (dto.batch_number !== undefined && dto.batch_number.trim()) payload.batch_number = dto.batch_number.trim();
+  if (dto.productionDate) payload.productionDate = new Date(dto.productionDate).toISOString();
+  if (dto.expirationDate) payload.expirationDate = new Date(dto.expirationDate).toISOString();
+  if (dto.poId !== undefined && dto.poId.trim()) payload.poId = dto.poId.trim();
+  return apiPatch<BackendBatch>(API.inventory.batchById(id), payload);
+}
+
+export async function updateBatchItem(
+  id: string,
+  dto: {
+    locationId?: string;
+    rackId?: string;
+    quantity?: number;
+    receivedQty?: number;
+    colorId?: string;
+    size?: string;
+    itemsPerPacket?: number;
+    note?: string;
+  }
+): Promise<any> {
+  const payload: any = {};
+  if (dto.locationId !== undefined && dto.locationId.trim()) payload.locationId = dto.locationId.trim();
+  if (dto.rackId !== undefined && dto.rackId.trim()) payload.rackId = dto.rackId.trim();
+  if (dto.quantity !== undefined) payload.quantity = Number(dto.quantity);
+  if (dto.receivedQty !== undefined) payload.receivedQty = Number(dto.receivedQty);
+  if (dto.colorId !== undefined && dto.colorId.trim()) payload.colorId = dto.colorId.trim();
+  if (dto.size !== undefined && dto.size.trim()) payload.size = dto.size.trim();
+  if (dto.itemsPerPacket !== undefined) payload.itemsPerPacket = Number(dto.itemsPerPacket);
+  if (dto.note !== undefined && dto.note.trim()) payload.note = dto.note.trim();
+  return apiPatch(API.inventory.batchItemById(id), payload);
+}
+
 // Stock Out List
 export async function getStockOutList(params?: Record<string, any>): Promise<StockOutItem[]> {
   try {

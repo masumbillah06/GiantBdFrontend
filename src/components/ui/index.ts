@@ -16,6 +16,9 @@ export { default as FormSearchableSelect } from "./form-searchable-select";
 export * from "./form-textarea";
 export { default as FormTextarea } from "./form-textarea";
 
+export * from "./form-tags-input";
+export { default as FormTagsInput } from "./form-tags-input";
+
 export * from "./form-action-bar";
 export { default as FormActionBar } from "./form-action-bar";
 

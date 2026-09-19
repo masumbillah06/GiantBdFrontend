@@ -22,10 +22,11 @@ import {
   columns,
   type RackRecord,
 } from "@/lib/mock-data/attributes/rack.mock";
-import { useRacks } from "@/features/attributes/hooks/use-attributes";
+import { useRacks, useRackMutations } from "@/features/attributes/hooks/use-attributes";
 
 export default function RackPage() {
   const { data = rackData, isLoading, error, refetch } = useRacks();
+  const { deleteMut } = useRackMutations();
   return (
     <TableProvider title="Racks" entityName="Rack" newHref="/attribute/rack/new">
       <div className="min-h-20 w-full flex justify-between items-center bg-white shadow-sm rounded-xl">
@@ -77,7 +78,14 @@ export default function RackPage() {
                 label="Delete Rack"
                 icon={Trash2}
                 variant="danger"
-                onClick={() => notify(`Deleted rack #${row.id}`)}
+                onClick={() => {
+                  if (confirm(`Are you sure you want to delete rack "${row.name}"?`)) {
+                    deleteMut.mutate(String(row.id), {
+                      onSuccess: () => notify(`Deleted rack #${row.id}`),
+                      onError: (err: any) => notify(err?.response?.data?.message || `Failed to delete rack`),
+                    });
+                  }
+                }}
               />
             </ActionButtonGroup>
           )}

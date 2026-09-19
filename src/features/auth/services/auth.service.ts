@@ -20,6 +20,10 @@ export async function verifyOtp(payload: VerifyOtpRequest): Promise<LoginRespons
   return res;
 }
 
+export async function resendOtp(email: string): Promise<{ message: string }> {
+  return apiPost<{ message: string }>(API.auth.resendOtp, { email });
+}
+
 export async function logout(): Promise<void> {
   try {
     await apiPost(API.auth.logout);

@@ -22,10 +22,11 @@ import {
   columns,
   type MaterialRecord,
 } from "@/lib/mock-data/attributes/material.mock";
-import { useMaterials } from "@/features/attributes/hooks/use-attributes";
+import { useMaterials, useMaterialMutations } from "@/features/attributes/hooks/use-attributes";
 
 export default function MaterialPage() {
   const { data = materialData, isLoading, error, refetch } = useMaterials();
+  const { deleteMut } = useMaterialMutations();
   return (
     <TableProvider title="Materials" entityName="Material" newHref="/attribute/material/new">
       <div className="min-h-20 w-full flex justify-between items-center bg-white shadow-sm rounded-xl">
@@ -77,7 +78,14 @@ export default function MaterialPage() {
                 label="Delete Material"
                 icon={Trash2}
                 variant="danger"
-                onClick={() => notify(`Deleted material #${row.id}`)}
+                onClick={() => {
+                  if (confirm(`Are you sure you want to delete material "${row.name}"?`)) {
+                    deleteMut.mutate(String(row.id), {
+                      onSuccess: () => notify(`Deleted material #${row.id}`),
+                      onError: (err: any) => notify(err?.response?.data?.message || `Failed to delete material`),
+                    });
+                  }
+                }}
               />
             </ActionButtonGroup>
           )}

@@ -46,17 +46,19 @@ export default function NewMaterialPage() {
       {
         name: name.trim(),
         description: description.trim() || undefined,
-        status: "Active",
       },
       {
         onSuccess: () => {
           router.push("/attribute/material");
         },
-        onError: (err: unknown) => {
-          const message =
-            err instanceof Error
-              ? err.message
-              : "Failed to create material. Please try again.";
+        onError: (err: any) => {
+          const resData = err?.response?.data;
+          let message = "Failed to create material. Please try again.";
+          if (resData?.message) {
+            message = Array.isArray(resData.message) ? resData.message.join(", ") : resData.message;
+          } else if (err?.message) {
+            message = err.message;
+          }
           setServerError(message);
         },
       }

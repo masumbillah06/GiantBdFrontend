@@ -14,6 +14,7 @@ import {
   createCategory,
   updateCategory,
   deleteCategory,
+  restoreCategory,
   createSubCategory,
   updateSubCategory,
   deleteSubCategory,
@@ -33,6 +34,7 @@ import {
   updateSubZone,
   deleteSubZone,
   createRack,
+  createBulkRacks,
   updateRack,
   deleteRack,
 } from "../services/attributes.service";
@@ -45,6 +47,7 @@ import type {
   CreateZoneInput,
   CreateSubZoneInput,
   CreateRackInput,
+  CreateBulkRacksInput,
 } from "../types/attribute.types";
 
 // ==========================================
@@ -81,7 +84,11 @@ export function useCategoryMutations() {
     mutationFn: (id: string) => deleteCategory(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["attributes", "categories"] }),
   });
-  return { createMut, updateMut, deleteMut };
+  const restoreMut = useMutation({
+    mutationFn: (id: string) => restoreCategory(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["attributes", "categories"] }),
+  });
+  return { createMut, updateMut, deleteMut, restoreMut };
 }
 
 // ==========================================
@@ -331,6 +338,10 @@ export function useRackMutations() {
     mutationFn: (data: CreateRackInput) => createRack(data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["attributes", "racks"] }),
   });
+  const createBulkMut = useMutation({
+    mutationFn: (data: CreateBulkRacksInput) => createBulkRacks(data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["attributes", "racks"] }),
+  });
   const updateMut = useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<CreateRackInput> }) =>
       updateRack(id, data),
@@ -340,7 +351,7 @@ export function useRackMutations() {
     mutationFn: (id: string) => deleteRack(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["attributes", "racks"] }),
   });
-  return { createMut, updateMut, deleteMut };
+  return { createMut, createBulkMut, updateMut, deleteMut };
 }
 
 // ==========================================

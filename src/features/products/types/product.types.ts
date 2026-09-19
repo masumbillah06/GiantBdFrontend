@@ -94,15 +94,16 @@ export interface VariantProduct {
 // DTOs for Mutations
 export interface CreateMasterProductDTO {
   name: string;
-  sku: string;
+  sku?: string;
   categoryId: string;
-  subCategoryId?: string;
-  materialId?: string;
+  subCategoryId: string;
+  materialId: string;
   description?: string;
 }
 
 export interface UpdateMasterProductDTO {
   name?: string;
+  sku?: string;
   categoryId?: string;
   subCategoryId?: string;
   materialId?: string;
@@ -110,14 +111,16 @@ export interface UpdateMasterProductDTO {
 }
 
 export interface CreateVariantProductDTO {
-  name: string;
-  sku: string;
+  masterProductId: string;
   size: string;
   colorId: string;
   gender: ProductGender;
-  masterProductId: string;
   uom?: UnitOfMeasurement;
   itemsPerPacket?: number;
+  packingType?: PackingType;
+  name?: string;
+  sku?: string;
+  barcode?: string;
   costPrice?: number;
   sellingPrice?: number;
   mrp?: number;
@@ -125,11 +128,16 @@ export interface CreateVariantProductDTO {
 
 export interface BulkCreateVariantDTO {
   masterProductId: string;
-  colorId: string;
+  colorIds?: string[];
+  colorId?: string;
+  sizes: string[];
   gender: ProductGender;
   uom?: UnitOfMeasurement;
   itemsPerPacket?: number;
-  sizes: string[];
+  packingType?: PackingType;
+  costPrice?: number;
+  sellingPrice?: number;
+  mrp?: number;
 }
 
 // Adapters

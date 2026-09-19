@@ -22,10 +22,11 @@ import {
   columns,
   type SubZoneRecord,
 } from "@/lib/mock-data/attributes/sub-zone.mock";
-import { useSubZones } from "@/features/attributes/hooks/use-attributes";
+import { useSubZones, useSubZoneMutations } from "@/features/attributes/hooks/use-attributes";
 
 export default function SubZonePage() {
   const { data = subZoneData, isLoading, error, refetch } = useSubZones();
+  const { deleteMut } = useSubZoneMutations();
   return (
     <TableProvider title="Sub Zones" entityName="Sub Zone" newHref="/attribute/sub-zone/new">
       <div className="min-h-20 w-full flex justify-between items-center bg-white shadow-sm rounded-xl">
@@ -77,7 +78,14 @@ export default function SubZonePage() {
                 label="Delete Sub Zone"
                 icon={Trash2}
                 variant="danger"
-                onClick={() => notify(`Deleted sub zone #${row.id}`)}
+                onClick={() => {
+                  if (confirm(`Are you sure you want to delete sub zone "${row.name}"?`)) {
+                    deleteMut.mutate(String(row.id), {
+                      onSuccess: () => notify(`Deleted sub zone #${row.id}`),
+                      onError: (err: any) => notify(err?.response?.data?.message || `Failed to delete sub zone`),
+                    });
+                  }
+                }}
               />
             </ActionButtonGroup>
           )}

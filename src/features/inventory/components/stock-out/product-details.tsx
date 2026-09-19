@@ -1,177 +1,109 @@
 "use client";
 
-import React, { useState } from "react";
-import { ChevronDown, ChevronsUpDown, ChevronUp, Plus, X } from "lucide-react";
+import React, { useState, useEffect } from "react";
 import {
-  DEFAULT_MASTER_OPTIONS,
-  DEFAULT_COLOR_OPTIONS,
-  DEFAULT_GENDER_OPTIONS,
-  DEFAULT_SIZES,
-} from "@/lib/constants/inventory-options";
+  ChevronDown,
+  ChevronUp,
+  Package,
+  Boxes,
+  Loader2,
+  CheckCircle2,
+  AlertCircle,
+  Zap,
+} from "lucide-react";
+import { usePreviewStockOutByPo } from "@/features/inventory/hooks/use-stock-out";
+import { useRawBatches } from "@/features/inventory/hooks/use-batch-list";
 
-export interface StockOutProductItem {
-  id: number;
-  name: string;
-  masterProduct: string;
-  color: string;
-  gender: string;
-  availableSizes: string[];
-  selectedSizes: string[];
-  quantities?: Record<string, number>;
+export interface StockOutAllocatedItem {
+  batchItemId: string;
+  issueQty: number;
+  productName?: string;
+  sku?: string;
+  size?: string;
+  batchCode?: string;
+  maxAvailable?: number;
 }
 
 export interface StockOutProductDetailsProps {
-  products?: StockOutProductItem[];
-  onChange?: (products: StockOutProductItem[]) => void;
-  masterOptions?: { value: string; label: string }[];
-  colorOptions?: string[];
-  genderOptions?: string[];
+  poId?: string;
+  onAllocationsChange?: (allocations: StockOutAllocatedItem[], totalQty: number) => void;
 }
 
 export function ProductDetails({
-  products: initialProducts,
-  onChange,
-  masterOptions = DEFAULT_MASTER_OPTIONS,
-  colorOptions = DEFAULT_COLOR_OPTIONS,
-  genderOptions = DEFAULT_GENDER_OPTIONS,
+  poId,
+  onAllocationsChange,
 }: StockOutProductDetailsProps) {
   const [isOpen, setIsOpen] = useState(true);
 
-  const [products, setProducts] = useState<StockOutProductItem[]>(
-    initialProducts && initialProducts.length > 0
-      ? initialProducts
-      : [
-          {
-            id: 1,
-            name: "Product 1",
-            masterProduct: "",
-            color: "",
-            gender: "",
-            availableSizes: [],
-            selectedSizes: [],
-          },
-        ]
+  // When poId is provided, fetch PO Preview
+  const {
+    data: poPreview,
+    isLoading: isLoadingPoPreview,
+    error: poPreviewError,
+  } = usePreviewStockOutByPo(poId || "");
+
+  // When no poId, fetch raw inventory batches
+  const {
+    data: rawBatches = [],
+    isLoading: isLoadingBatches,
+  } = useRawBatches({ enabled: !poId });
+
+  // Allocation state: batchItemId -> issueQty
+  const [allocations, setAllocations] = useState<Record<string, number>>({});
+
+  // Reset allocations when poId changes
+  useEffect(() => {
+    setAllocations({});
+  }, [poId]);
+
+  // Propagate allocations to parent whenever allocations state changes
+  useEffect(() => {
+    const list: StockOutAllocatedItem[] = Object.entries(allocations)
+      .filter(([_, qty]) => qty > 0)
+      .map(([batchItemId, issueQty]) => ({
+        batchItemId,
+        issueQty,
+      }));
+
+    const totalQty = list.reduce((sum, item) => sum + item.issueQty, 0);
+    onAllocationsChange?.(list, totalQty);
+  }, [allocations, onAllocationsChange]);
+
+  const handleQtyChange = (batchItemId: string, qty: number, maxAvailable: number) => {
+    const cleanQty = Math.max(0, Math.min(qty || 0, maxAvailable));
+    setAllocations((prev) => ({
+      ...prev,
+      [batchItemId]: cleanQty,
+    }));
+  };
+
+  // Auto Allocate FIFO for all PO items
+  const handleAutoAllocateFifo = () => {
+    if (!poPreview?.items) return;
+
+    const newAllocations: Record<string, number> = {};
+
+    poPreview.items.forEach((item: any) => {
+      let needed = item.remainingQty;
+      if (needed <= 0 || !item.availableWarehouseStock) return;
+
+      for (const stock of item.availableWarehouseStock) {
+        if (needed <= 0) break;
+        const canTake = Math.min(needed, stock.inHand);
+        if (canTake > 0) {
+          newAllocations[stock.batchItemId] = canTake;
+          needed -= canTake;
+        }
+      }
+    });
+
+    setAllocations(newAllocations);
+  };
+
+  const totalAllocatedUnits = Object.values(allocations).reduce(
+    (sum, q) => sum + (q || 0),
+    0
   );
-
-  const [activeProductId, setActiveProductId] = useState<number>(products[0]?.id || 1);
-  const [customSizeInput, setCustomSizeInput] = useState<string>("");
-
-  const currentProduct =
-    products.find((p) => p.id === activeProductId) || products[0];
-
-  const updateCurrentProduct = (updates: Partial<StockOutProductItem>) => {
-    setProducts((prev) => {
-      const next = prev.map((p) =>
-        p.id === currentProduct.id ? { ...p, ...updates } : p
-      );
-      onChange?.(next);
-      return next;
-    });
-  };
-
-  const handleAddProduct = () => {
-    const nextId =
-      products.length > 0 ? Math.max(...products.map((p) => p.id)) + 1 : 1;
-    const newProduct: StockOutProductItem = {
-      id: nextId,
-      name: `Product ${nextId}`,
-      masterProduct: "",
-      color: "",
-      gender: "",
-      availableSizes: [],
-      selectedSizes: [],
-    };
-    const next = [...products, newProduct];
-    setProducts(next);
-    setActiveProductId(nextId);
-    onChange?.(next);
-  };
-
-  const handleRemoveProduct = (id: number) => {
-    if (products.length <= 1) return;
-    const next = products.filter((p) => p.id !== id);
-    setProducts(next);
-    if (activeProductId === id) {
-      setActiveProductId(next[0].id);
-    }
-    onChange?.(next);
-  };
-
-  // When master/color/gender are changed, update available sizes if all 3 are set
-  const handleMasterChange = (masterValue: string) => {
-    const hasColorAndGender = currentProduct.color && currentProduct.gender;
-    const sizes =
-      masterValue && hasColorAndGender
-        ? currentProduct.availableSizes.length
-          ? currentProduct.availableSizes
-          : DEFAULT_SIZES
-        : [];
-    updateCurrentProduct({
-      masterProduct: masterValue,
-      availableSizes: sizes,
-    });
-  };
-
-  const handleColorChange = (colorValue: string) => {
-    const hasMasterAndGender = currentProduct.masterProduct && currentProduct.gender;
-    const sizes =
-      colorValue && hasMasterAndGender
-        ? currentProduct.availableSizes.length
-          ? currentProduct.availableSizes
-          : DEFAULT_SIZES
-        : [];
-    updateCurrentProduct({
-      color: colorValue,
-      availableSizes: sizes,
-    });
-  };
-
-  const handleGenderChange = (genderValue: string) => {
-    const hasMasterAndColor = currentProduct.masterProduct && currentProduct.color;
-    const sizes =
-      genderValue && hasMasterAndColor
-        ? currentProduct.availableSizes.length
-          ? currentProduct.availableSizes
-          : DEFAULT_SIZES
-        : [];
-    updateCurrentProduct({
-      gender: genderValue,
-      availableSizes: sizes,
-    });
-  };
-
-  const handleToggleSize = (size: string) => {
-    const isSelected = currentProduct.selectedSizes.includes(size);
-    const updated = isSelected
-      ? currentProduct.selectedSizes.filter((s) => s !== size)
-      : [...currentProduct.selectedSizes, size];
-    updateCurrentProduct({ selectedSizes: updated });
-  };
-
-  const handleAddCustomSize = (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    const trimmed = customSizeInput.trim();
-    if (!trimmed) return;
-
-    const existing = currentProduct.availableSizes;
-    const updatedSizes = existing.includes(trimmed)
-      ? existing
-      : [...existing, trimmed];
-    const updatedSelected = currentProduct.selectedSizes.includes(trimmed)
-      ? currentProduct.selectedSizes
-      : [...currentProduct.selectedSizes, trimmed];
-
-    updateCurrentProduct({
-      availableSizes: updatedSizes,
-      selectedSizes: updatedSelected,
-    });
-    setCustomSizeInput("");
-  };
-
-  const isReadyForSizes =
-    !!currentProduct.masterProduct &&
-    !!currentProduct.color &&
-    !!currentProduct.gender;
 
   return (
     <div className="w-full rounded-2xl border border-slate-200/90 bg-white shadow-xs">
@@ -179,8 +111,13 @@ export function ProductDetails({
       <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
         <div className="flex items-center gap-2.5">
           <div className="h-5 w-1 rounded-full bg-[#476ab8]" />
-          <h2 className="text-base font-bold text-slate-900 tracking-tight">
-            Product Details
+          <h2 className="text-base font-bold text-slate-900 tracking-tight flex items-center gap-2">
+            <span>Product Details & Warehouse Stock Allocation</span>
+            {totalAllocatedUnits > 0 && (
+              <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-xs font-semibold">
+                {totalAllocatedUnits} units ready to dispatch
+              </span>
+            )}
           </h2>
         </div>
         <button
@@ -196,192 +133,301 @@ export function ProductDetails({
       {/* Collapsible Content */}
       {isOpen && (
         <div className="p-6">
-          <div className="rounded-xl border border-slate-200/90 bg-white p-5">
-            {/* Top Bar: Product Badges & ADD button */}
-            <div className="flex items-center justify-between mb-5">
-              <div className="flex items-center gap-2">
-                {products.map((prod) => (
-                  <div key={prod.id} className="inline-flex items-center">
+          {poId ? (
+            /* ──────── PO-Based Stock Out Mode ──────── */
+            <div>
+              {isLoadingPoPreview ? (
+                <div className="py-12 flex flex-col items-center justify-center gap-3 text-slate-500">
+                  <Loader2 size={24} className="animate-spin text-[#476ab8]" />
+                  <p className="text-sm font-medium">Loading PO items and matching warehouse racks...</p>
+                </div>
+              ) : poPreviewError ? (
+                <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm flex items-center gap-2">
+                  <AlertCircle size={18} className="shrink-0" />
+                  <span>Unable to preview PO items: {(poPreviewError as any)?.message || "Not found"}</span>
+                </div>
+              ) : poPreview?.items?.length > 0 ? (
+                <div className="space-y-5">
+                  {/* PO Summary Badge Header */}
+                  <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 flex flex-wrap items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-xl bg-[#476ab8]/10 text-[#476ab8] flex items-center justify-center font-bold">
+                        <Boxes size={20} />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-slate-900 text-sm">{poPreview.po?.poNumber}</span>
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 font-medium">
+                            {poPreview.po?.status || "Active"}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-500">
+                          LC: {poPreview.po?.lc?.lcNumber || "Direct"} • Buyer: {poPreview.po?.buyer?.name || "N/A"} • Total Ordered: {poPreview.po?.totalQuantity || 0} pcs
+                        </p>
+                      </div>
+                    </div>
+
                     <button
                       type="button"
-                      onClick={() => setActiveProductId(prod.id)}
-                      className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                        prod.id === currentProduct.id
-                          ? "bg-slate-100 text-slate-800 border border-slate-200 shadow-2xs"
-                          : "bg-slate-50 text-slate-500 hover:bg-slate-100 border border-transparent"
-                      }`}
+                      onClick={handleAutoAllocateFifo}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#476ab8] hover:bg-[#3b5ba0] text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
                     >
-                      {prod.name}
+                      <Zap size={14} />
+                      <span>Auto Allocate (FIFO)</span>
                     </button>
-                    {products.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveProduct(prod.id)}
-                        className="ml-1 p-1 text-slate-400 hover:text-red-500 transition-colors rounded-full"
-                        title="Remove product"
-                      >
-                        <X size={12} />
-                      </button>
-                    )}
                   </div>
-                ))}
-              </div>
 
-              <button
-                type="button"
-                onClick={handleAddProduct}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#476ab8] hover:bg-[#3b5ba0] text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer focus:outline-none"
-              >
-                <Plus size={14} strokeWidth={2.5} />
-                <span>ADD</span>
-              </button>
-            </div>
+                  {/* PO Items Cards */}
+                  <div className="space-y-4">
+                    {poPreview.items.map((item: any) => {
+                      const itemAllocated = (item.availableWarehouseStock || []).reduce(
+                        (sum: number, st: any) => sum + (allocations[st.batchItemId] || 0),
+                        0
+                      );
+                      const isFulfilled = itemAllocated >= item.remainingQty && item.remainingQty > 0;
 
-            {/* 3 Columns: Master Product, Color, Gender */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-x-5 gap-y-4">
-              {/* Master Product * */}
-              <div>
-                <label className="block text-xs font-medium text-slate-800 mb-1.5">
-                  Master Product <span className="text-red-500 font-semibold">*</span>
-                </label>
-                <div className="relative">
-                  <select
-                    value={currentProduct.masterProduct}
-                    onChange={(e) => handleMasterChange(e.target.value)}
-                    className="w-full appearance-none rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-xs sm:text-sm text-slate-800 focus:border-[#476ab8] focus:ring-1 focus:ring-[#476ab8] focus:outline-none transition-all pr-9 cursor-pointer"
-                  >
-                    <option value="" disabled>
-                      Select Master...
-                    </option>
-                    {masterOptions.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronsUpDown
-                    size={15}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
-                  />
-                </div>
-              </div>
-
-              {/* Color * */}
-              <div>
-                <label className="block text-xs font-medium text-slate-800 mb-1.5">
-                  Color <span className="text-red-500 font-semibold">*</span>
-                </label>
-                <div className="relative">
-                  <select
-                    value={currentProduct.color}
-                    onChange={(e) => handleColorChange(e.target.value)}
-                    className="w-full appearance-none rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-xs sm:text-sm text-slate-800 focus:border-[#476ab8] focus:ring-1 focus:ring-[#476ab8] focus:outline-none transition-all pr-9 cursor-pointer"
-                  >
-                    <option value="" disabled>
-                      Select Color
-                    </option>
-                    {colorOptions.map((col) => (
-                      <option key={col} value={col}>
-                        {col}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown
-                    size={15}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
-                  />
-                </div>
-              </div>
-
-              {/* Gender * */}
-              <div>
-                <label className="block text-xs font-medium text-slate-800 mb-1.5">
-                  Gender <span className="text-red-500 font-semibold">*</span>
-                </label>
-                <div className="relative">
-                  <select
-                    value={currentProduct.gender}
-                    onChange={(e) => handleGenderChange(e.target.value)}
-                    className="w-full appearance-none rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-xs sm:text-sm text-slate-800 focus:border-[#476ab8] focus:ring-1 focus:ring-[#476ab8] focus:outline-none transition-all pr-9 cursor-pointer"
-                  >
-                    <option value="" disabled>
-                      Select Gender
-                    </option>
-                    {genderOptions.map((gen) => (
-                      <option key={gen} value={gen}>
-                        {gen}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown
-                    size={15}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Available Sizes Section */}
-            <div className="mt-5 space-y-2">
-              <label className="block text-xs font-medium text-slate-800">
-                Available Sizes
-              </label>
-
-              {/* Sizes Container */}
-              <div className="w-full rounded-lg border border-slate-200 bg-[#f8fafc] px-4 py-3 min-h-[46px] flex flex-wrap items-center gap-2">
-                {!isReadyForSizes || currentProduct.availableSizes.length === 0 ? (
-                  <span className="text-xs sm:text-sm text-slate-400">
-                    Select Master Product, Color and Gender to load sizes
-                  </span>
-                ) : (
-                  <>
-                    {currentProduct.availableSizes.map((sz) => {
-                      const isSelected = currentProduct.selectedSizes.includes(sz);
                       return (
-                        <button
-                          key={sz}
-                          type="button"
-                          onClick={() => handleToggleSize(sz)}
-                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer border ${
-                            isSelected
-                              ? "bg-[#476ab8] text-white border-[#476ab8] shadow-2xs"
-                              : "bg-white text-slate-700 border-slate-300 hover:bg-slate-100"
-                          }`}
+                        <div
+                          key={item.poItemId}
+                          className="rounded-xl border border-slate-200 bg-white p-4.5 hover:border-slate-300 transition-all shadow-2xs"
                         >
-                          <span>{sz}</span>
-                          {isSelected && <span className="text-xs">✓</span>}
-                        </button>
+                          {/* Item Meta Row */}
+                          <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100">
+                            <div>
+                              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                                <span>{item.masterProductName}</span>
+                                <span className="text-xs font-normal text-slate-500">({item.sku})</span>
+                              </h3>
+                              <div className="flex items-center gap-3 text-xs text-slate-600 mt-1">
+                                <span className="bg-slate-100 px-2 py-0.5 rounded">Color: <strong>{item.color}</strong></span>
+                                <span className="bg-slate-100 px-2 py-0.5 rounded">Size: <strong>{item.size}</strong></span>
+                                <span className="bg-slate-100 px-2 py-0.5 rounded">Gender: <strong>{item.gender}</strong></span>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-4 text-xs">
+                              <div className="text-right">
+                                <p className="text-slate-400">Order / Remaining</p>
+                                <p className="font-bold text-slate-800 text-sm">
+                                  {item.reqQty} / <span className="text-amber-600">{item.remainingQty} pcs</span>
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-slate-400">Allocated</p>
+                                <p className={`font-bold text-sm ${isFulfilled ? "text-emerald-600" : "text-[#476ab8]"}`}>
+                                  {itemAllocated} pcs {isFulfilled && "✓"}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Available Batches in FIFO Order */}
+                          <div className="mt-3">
+                            <h4 className="text-xs font-semibold text-slate-700 mb-2 flex items-center gap-1">
+                              <Package size={13} className="text-slate-400" />
+                              <span>Available Warehouse Stock Batches (FIFO)</span>
+                            </h4>
+
+                            {item.availableWarehouseStock?.length > 0 ? (
+                              <div className="overflow-x-auto">
+                                <table className="w-full text-xs text-left">
+                                  <thead className="bg-slate-50 text-slate-600 border-b border-slate-200">
+                                    <tr>
+                                      <th className="py-2 px-3">Batch Code</th>
+                                      <th className="py-2 px-3">Production Date</th>
+                                      <th className="py-2 px-3">Warehouse & Zone</th>
+                                      <th className="py-2 px-3">Rack / Location</th>
+                                      <th className="py-2 px-3 text-right">In Hand</th>
+                                      <th className="py-2 px-3 text-center w-36">Issue Quantity</th>
+                                      <th className="py-2 px-3 text-right w-24">Action</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody className="divide-y divide-slate-100">
+                                    {item.availableWarehouseStock.map((stock: any) => {
+                                      const currentQty = allocations[stock.batchItemId] || 0;
+                                      return (
+                                        <tr
+                                          key={stock.batchItemId}
+                                          className={`hover:bg-slate-50/70 transition-colors ${
+                                            currentQty > 0 ? "bg-blue-50/30" : ""
+                                          }`}
+                                        >
+                                          <td className="py-2.5 px-3 font-semibold text-slate-800">
+                                            {stock.batchCode}
+                                          </td>
+                                          <td className="py-2.5 px-3 text-slate-500">
+                                            {stock.productionDate
+                                              ? new Date(stock.productionDate).toLocaleDateString()
+                                              : "N/A"}
+                                          </td>
+                                          <td className="py-2.5 px-3 text-slate-600">
+                                            {stock.buildingZone || stock.warehouseName}
+                                          </td>
+                                          <td className="py-2.5 px-3 font-medium text-slate-700">
+                                            <span className="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200">
+                                              {stock.subZoneRack} ({stock.locationCode})
+                                            </span>
+                                          </td>
+                                          <td className="py-2.5 px-3 text-right font-bold text-slate-800">
+                                            {stock.inHand}
+                                          </td>
+                                          <td className="py-2.5 px-3 text-center">
+                                            <input
+                                              type="number"
+                                              min="0"
+                                              max={stock.inHand}
+                                              value={currentQty === 0 ? "" : currentQty}
+                                              onChange={(e) =>
+                                                handleQtyChange(
+                                                  stock.batchItemId,
+                                                  parseInt(e.target.value) || 0,
+                                                  stock.inHand
+                                                )
+                                              }
+                                              placeholder="0"
+                                              className="w-24 text-center py-1 px-2 text-xs font-bold rounded border border-slate-200 focus:border-[#476ab8] focus:ring-1 focus:ring-[#476ab8] outline-none"
+                                            />
+                                          </td>
+                                          <td className="py-2.5 px-3 text-right">
+                                            <button
+                                              type="button"
+                                              onClick={() => {
+                                                const remainingToFill = Math.max(0, item.remainingQty - (itemAllocated - currentQty));
+                                                const fillQty = Math.min(remainingToFill, stock.inHand);
+                                                handleQtyChange(stock.batchItemId, fillQty, stock.inHand);
+                                              }}
+                                              className="text-[11px] font-semibold text-[#476ab8] hover:underline cursor-pointer"
+                                            >
+                                              Max Needed
+                                            </button>
+                                          </td>
+                                        </tr>
+                                      );
+                                    })}
+                                  </tbody>
+                                </table>
+                              </div>
+                            ) : (
+                              <div className="p-3 bg-amber-50/70 border border-amber-200/80 rounded-lg text-xs text-amber-800 flex items-center gap-2">
+                                <AlertCircle size={14} className="shrink-0" />
+                                <span>No warehouse stock currently in hand for this SKU variant. Receive stock in first.</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       );
                     })}
-
-                    {/* Add Custom Size Form */}
-                    <div className="ml-auto flex items-center gap-1.5">
-                      <input
-                        type="text"
-                        value={customSizeInput}
-                        onChange={(e) => setCustomSizeInput(e.target.value)}
-                        placeholder="+ Custom"
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                            handleAddCustomSize();
-                          }
-                        }}
-                        className="w-20 px-2 py-1 text-xs rounded border border-slate-200 bg-white placeholder:text-slate-400 focus:outline-none focus:border-[#476ab8]"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => handleAddCustomSize()}
-                        className="px-2 py-1 text-xs rounded bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium transition-colors"
-                      >
-                        Add
-                      </button>
-                    </div>
-                  </>
+                  </div>
+                </div>
+              ) : (
+                <div className="py-8 text-center text-slate-500 text-sm">
+                  This Purchase Order does not contain any items yet.
+                </div>
+              )}
+            </div>
+          ) : (
+            /* ──────── Direct / Warehouse Stock Out Mode ──────── */
+            <div>
+              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 mb-4 flex items-center justify-between">
+                <div>
+                  <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                    Direct Inventory Batch Stock Out
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Select quantities from existing warehouse batches to dispatch without a PO.
+                  </p>
+                </div>
+                {totalAllocatedUnits > 0 && (
+                  <span className="text-xs font-bold text-emerald-600 flex items-center gap-1">
+                    <CheckCircle2 size={14} /> {totalAllocatedUnits} units selected
+                  </span>
                 )}
               </div>
+
+              {isLoadingBatches ? (
+                <div className="py-8 text-center text-slate-500 text-sm flex items-center justify-center gap-2">
+                  <Loader2 size={18} className="animate-spin text-[#476ab8]" /> Loading available warehouse batches...
+                </div>
+              ) : rawBatches.length > 0 ? (
+                <div className="space-y-3">
+                  {rawBatches.map((batch: any) => {
+                    const batchItems = batch.items || [];
+                    if (batchItems.length === 0) return null;
+
+                    return (
+                      <div key={batch.id} className="p-4 rounded-xl border border-slate-200 bg-white">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-bold text-slate-900">
+                            Batch: {batch.batch_id} {batch.batch_number ? `(${batch.batch_number})` : ""}
+                          </span>
+                          <span className="text-xs text-slate-500">
+                            Prod Date: {batch.productionDate ? new Date(batch.productionDate).toLocaleDateString() : "N/A"}
+                          </span>
+                        </div>
+
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-xs text-left">
+                            <thead className="bg-slate-50 text-slate-600 border-b border-slate-200">
+                              <tr>
+                                <th className="py-2 px-3">Product / SKU</th>
+                                <th className="py-2 px-3">Color</th>
+                                <th className="py-2 px-3">Size</th>
+                                <th className="py-2 px-3">Rack / Location</th>
+                                <th className="py-2 px-3 text-right">Available Qty</th>
+                                <th className="py-2 px-3 text-center w-32">Issue Qty</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                              {batchItems.map((bi: any) => {
+                                const maxAvail = bi.availableQty ?? bi.totalQuantity ?? 0;
+                                const currentQty = allocations[bi.id] || 0;
+                                return (
+                                  <tr key={bi.id} className="hover:bg-slate-50/60">
+                                    <td className="py-2 px-3 font-semibold text-slate-800">
+                                      {bi.product?.name || "Variant"} ({bi.product?.sku})
+                                    </td>
+                                    <td className="py-2 px-3 text-slate-600">
+                                      {bi.product?.color?.name || "N/A"}
+                                    </td>
+                                    <td className="py-2 px-3 font-bold text-slate-800">
+                                      {bi.product?.size || "N/A"}
+                                    </td>
+                                    <td className="py-2 px-3 text-slate-600">
+                                      {bi.location?.code || bi.location?.name || "Main Warehouse"}
+                                    </td>
+                                    <td className="py-2 px-3 text-right font-bold text-slate-800">
+                                      {maxAvail}
+                                    </td>
+                                    <td className="py-2 px-3 text-center">
+                                      <input
+                                        type="number"
+                                        min="0"
+                                        max={maxAvail}
+                                        value={currentQty === 0 ? "" : currentQty}
+                                        onChange={(e) =>
+                                          handleQtyChange(bi.id, parseInt(e.target.value) || 0, maxAvail)
+                                        }
+                                        placeholder="0"
+                                        className="w-20 text-center py-1 px-2 text-xs font-bold rounded border border-slate-200 focus:border-[#476ab8] outline-none"
+                                      />
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="py-8 text-center text-slate-500 text-sm">
+                  No stock in finished goods batches currently found. Receive items through Stock In first.
+                </div>
+              )}
             </div>
-          </div>
+          )}
         </div>
       )}
     </div>
@@ -390,4 +436,3 @@ export function ProductDetails({
 
 export const StockOutProductDetails = ProductDetails;
 export default ProductDetails;
-

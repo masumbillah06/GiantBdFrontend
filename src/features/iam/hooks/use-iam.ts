@@ -18,8 +18,11 @@ import {
   deleteRole,
   restoreRole,
   getPermissions,
+  getRawPermissions,
+  seedPermissions,
 } from "../services/iam.service";
 import type { UserRecord, RoleRecord, PermissionRecord } from "../types/iam.types";
+import type { Permission } from "@/features/auth/types/auth.types";
 
 export function useUsers(params?: Record<string, any>) {
   return useQuery<UserRecord[]>({
@@ -151,5 +154,22 @@ export function usePermissions() {
   return useQuery<PermissionRecord[]>({
     queryKey: ["iam", "permissions"],
     queryFn: getPermissions,
+  });
+}
+
+export function useRawPermissions() {
+  return useQuery<Permission[]>({
+    queryKey: ["iam", "permissions", "raw"],
+    queryFn: getRawPermissions,
+  });
+}
+
+export function useSeedPermissions() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: seedPermissions,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["iam", "permissions"] });
+    },
   });
 }

@@ -10,6 +10,7 @@ export interface DocumentItem {
   fileName: string;
   fileSize?: string;
   uploadedAt?: string;
+  file?: File;
 }
 
 interface DocumentsProps {
@@ -44,6 +45,7 @@ export function Documents({ onDocumentsChange }: DocumentsProps) {
         ? `${(selectedFile.size / 1024).toFixed(1)} KB`
         : undefined,
       uploadedAt: new Date().toLocaleDateString(),
+      file: selectedFile || undefined,
     };
 
     const updated = [...documents, newDoc];

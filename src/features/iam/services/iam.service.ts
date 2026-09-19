@@ -111,10 +111,16 @@ export async function createRole(data: {
   isTwoFactorRequired?: boolean;
   permissionIds?: string[];
 }): Promise<Role> {
-  const payload: any = { name: data.name };
-  if (data.description !== undefined) payload.description = data.description;
-  if (data.isTwoFactorRequired !== undefined) payload.isTwoFactorRequired = Boolean(data.isTwoFactorRequired);
-  if (data.permissionIds && data.permissionIds.length > 0) payload.permissionIds = data.permissionIds;
+  const payload: any = { name: data.name.trim() };
+  if (data.description !== undefined && data.description.trim()) {
+    payload.description = data.description.trim();
+  }
+  if (data.isTwoFactorRequired !== undefined) {
+    payload.isTwoFactorRequired = Boolean(data.isTwoFactorRequired);
+  }
+  if (data.permissionIds && data.permissionIds.length > 0) {
+    payload.permissionIds = data.permissionIds;
+  }
   return apiPost<Role>(API.roles.create, payload);
 }
 
@@ -146,6 +152,25 @@ export async function restoreRole(id: string): Promise<Role> {
 }
 
 // Permissions
+export async function getRawPermissions(): Promise<Permission[]> {
+  try {
+    const permissions = await apiGet<Permission[]>(API.permissions.list);
+    return permissions || [];
+  } catch (error) {
+    console.warn('[IAMService] Failed to fetch raw permissions:', error);
+    return [];
+  }
+}
+
+export async function seedPermissions(): Promise<{
+  message: string;
+  created: number;
+  existing: number;
+  total: number;
+}> {
+  return apiPost(API.permissions.seed);
+}
+
 export async function getPermissions(): Promise<PermissionRecord[]> {
   try {
     const permissions = await apiGet<Permission[]>(API.permissions.list);

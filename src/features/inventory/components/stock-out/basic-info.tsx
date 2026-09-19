@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Calendar, ChevronDown, ChevronsUpDown, ChevronUp } from "lucide-react";
 import {
   DEFAULT_LCS,
@@ -8,13 +8,20 @@ import {
   DEFAULT_BUYERS,
   DEFAULT_LOCATIONS,
 } from "@/lib/constants/inventory-options";
+import { useLCs, usePOs, useRawBuyers } from "@/features/crm/hooks/use-buyers";
+import type { StockOutType } from "@/features/inventory/types/inventory.types";
 
 export interface BasicInfoData {
   shipmentLc: string;
+  shipmentLcId?: string;
   shipmentPo: string;
+  shipmentPoId?: string;
   buyer: string;
+  buyerId?: string;
+  stockOutType: StockOutType;
   toLocation: string;
   stockOutDate: string;
+  note?: string;
 }
 
 export interface StockOutBasicInfoProps {
@@ -36,6 +43,11 @@ export function BasicInfo({
 }: StockOutBasicInfoProps) {
   const [isOpen, setIsOpen] = useState(true);
 
+  // Live CRM Queries
+  const { data: liveLCs = [] } = useLCs();
+  const { data: livePOs = [] } = usePOs();
+  const { data: liveBuyers = [] } = useRawBuyers();
+
   // Format today's date MM/DD/YYYY
   const getTodayFormatted = () => {
     const d = new Date();
@@ -47,29 +59,88 @@ export function BasicInfo({
 
   const [formData, setFormData] = useState<BasicInfoData>({
     shipmentLc: data?.shipmentLc || "",
+    shipmentLcId: data?.shipmentLcId || "",
     shipmentPo: data?.shipmentPo || "",
+    shipmentPoId: data?.shipmentPoId || "",
     buyer: data?.buyer || "",
+    buyerId: data?.buyerId || "",
+    stockOutType: data?.stockOutType || "PO_SHIPMENT",
     toLocation: data?.toLocation || "",
     stockOutDate: data?.stockOutDate || getTodayFormatted(),
+    note: data?.note || "",
   });
 
-  const updateField = (field: keyof BasicInfoData, value: string) => {
-    const updated = { ...formData, [field]: value };
-    // If changing LC, reset PO if current PO doesn't belong to new LC
-    if (field === "shipmentLc") {
-      updated.shipmentPo = "";
+  // Synchronize when external props change
+  useEffect(() => {
+    if (data) {
+      setFormData((prev) => ({
+        ...prev,
+        ...data,
+      }));
     }
+  }, [data]);
+
+  const updateField = (field: keyof BasicInfoData, value: any) => {
+    let updated = { ...formData, [field]: value };
+
+    // When LC changes
+    if (field === "shipmentLc") {
+      const matchedLc = liveLCs.find((l) => l.id === value || l.lcNumber === value);
+      updated.shipmentLc = matchedLc ? matchedLc.lcNumber : value;
+      updated.shipmentLcId = matchedLc ? matchedLc.id : value;
+      updated.shipmentPo = "";
+      updated.shipmentPoId = "";
+
+      // Auto-assign buyer if available on LC
+      if (matchedLc?.buyerId) {
+        const foundBuyer = liveBuyers.find((b) => b.id === matchedLc.buyerId);
+        if (foundBuyer) {
+          updated.buyer = foundBuyer.name;
+          updated.buyerId = foundBuyer.id;
+        }
+      }
+    }
+
+    // When PO changes
+    if (field === "shipmentPo") {
+      const matchedPo = livePOs.find((p) => p.id === value || p.poNumber === value);
+      updated.shipmentPo = matchedPo ? matchedPo.poNumber : value;
+      updated.shipmentPoId = matchedPo ? matchedPo.id : value;
+
+      // Auto-assign buyer if available on PO
+      if (matchedPo?.buyerId) {
+        const foundBuyer = liveBuyers.find((b) => b.id === matchedPo.buyerId);
+        if (foundBuyer) {
+          updated.buyer = foundBuyer.name;
+          updated.buyerId = foundBuyer.id;
+        }
+      }
+
+      // Auto-assign LC if available on PO
+      if (matchedPo?.lcId) {
+        const foundLc = liveLCs.find((l) => l.id === matchedPo.lcId);
+        if (foundLc) {
+          updated.shipmentLc = foundLc.lcNumber;
+          updated.shipmentLcId = foundLc.id;
+        }
+      }
+    }
+
+    // When Buyer changes
+    if (field === "buyer") {
+      const foundBuyer = liveBuyers.find((b) => b.id === value || b.name === value);
+      updated.buyer = foundBuyer ? foundBuyer.name : value;
+      updated.buyerId = foundBuyer ? foundBuyer.id : value;
+    }
+
     setFormData(updated);
     onChange?.(updated);
   };
 
-  // PO options based on selected LC
-  const currentPoOptions = formData.shipmentLc
-    ? poOptionsMap[formData.shipmentLc] || [
-        `PO-${formData.shipmentLc.slice(-3)}-01`,
-        `PO-${formData.shipmentLc.slice(-3)}-02`,
-      ]
-    : [];
+  // Filter available POs based on selected LC
+  const availablePOs = formData.shipmentLcId
+    ? livePOs.filter((p) => p.lcId === formData.shipmentLcId || p.lc?.lcNumber === formData.shipmentLc)
+    : livePOs;
 
   return (
     <div className="w-full rounded-2xl border border-slate-200/90 bg-white shadow-xs">
@@ -94,26 +165,56 @@ export function BasicInfo({
       {/* Collapsible Content */}
       {isOpen && (
         <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-5 gap-y-4">
-            {/* Shipment (LC) * */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-5 gap-y-4">
+            {/* Stock Out Type */}
             <div>
               <label className="block text-xs font-medium text-slate-800 mb-1.5">
-                Shipment (LC) <span className="text-red-500 font-semibold">*</span>
+                Stock Out Reason / Type <span className="text-red-500 font-semibold">*</span>
               </label>
               <div className="relative">
                 <select
-                  value={formData.shipmentLc}
+                  value={formData.stockOutType}
+                  onChange={(e) => updateField("stockOutType", e.target.value as StockOutType)}
+                  className="w-full appearance-none rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-xs sm:text-sm text-slate-800 focus:border-[#476ab8] focus:ring-1 focus:ring-[#476ab8] focus:outline-none transition-all pr-9 cursor-pointer"
+                >
+                  <option value="PO_SHIPMENT">PO Shipment (Export / Client Delivery)</option>
+                  <option value="DIRECT_SALE">Direct Sale</option>
+                  <option value="SAMPLE_DISPATCH">Sample Dispatch</option>
+                  <option value="DAMAGE_SCRAP">Damage / Scrap Disposal</option>
+                  <option value="INTERNAL_TRANSFER">Internal Warehouse Transfer</option>
+                </select>
+                <ChevronDown
+                  size={15}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+                />
+              </div>
+            </div>
+
+            {/* Shipment (LC) */}
+            <div>
+              <label className="block text-xs font-medium text-slate-800 mb-1.5">
+                Shipment (LC) {formData.stockOutType === "PO_SHIPMENT" && <span className="text-red-500 font-semibold">*</span>}
+              </label>
+              <div className="relative">
+                <select
+                  value={formData.shipmentLcId || formData.shipmentLc}
                   onChange={(e) => updateField("shipmentLc", e.target.value)}
                   className="w-full appearance-none rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-xs sm:text-sm text-slate-800 focus:border-[#476ab8] focus:ring-1 focus:ring-[#476ab8] focus:outline-none transition-all pr-9 cursor-pointer"
                 >
-                  <option value="" disabled>
-                    Select LC
-                  </option>
-                  {lcOptions.map((lc) => (
-                    <option key={lc} value={lc}>
-                      {lc}
-                    </option>
-                  ))}
+                  <option value="">Select LC</option>
+                  {liveLCs.length > 0 ? (
+                    liveLCs.map((lc) => (
+                      <option key={lc.id} value={lc.id}>
+                        {lc.lcNumber} {lc.buyer?.name ? `(${lc.buyer.name})` : ""}
+                      </option>
+                    ))
+                  ) : (
+                    lcOptions.map((lc) => (
+                      <option key={lc} value={lc}>
+                        {lc}
+                      </option>
+                    ))
+                  )}
                 </select>
                 <ChevronsUpDown
                   size={15}
@@ -122,30 +223,31 @@ export function BasicInfo({
               </div>
             </div>
 
-            {/* Shipment (PO) * */}
+            {/* Shipment (PO) */}
             <div>
               <label className="block text-xs font-medium text-slate-800 mb-1.5">
-                Shipment (PO) <span className="text-red-500 font-semibold">*</span>
+                Shipment (PO) {formData.stockOutType === "PO_SHIPMENT" && <span className="text-red-500 font-semibold">*</span>}
               </label>
               <div className="relative">
                 <select
-                  value={formData.shipmentPo}
+                  value={formData.shipmentPoId || formData.shipmentPo}
                   onChange={(e) => updateField("shipmentPo", e.target.value)}
-                  disabled={!formData.shipmentLc}
-                  className={`w-full appearance-none rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-xs sm:text-sm text-slate-800 focus:border-[#476ab8] focus:ring-1 focus:ring-[#476ab8] focus:outline-none transition-all pr-9 ${
-                    !formData.shipmentLc
-                      ? "bg-slate-50/70 text-slate-400 cursor-not-allowed"
-                      : "cursor-pointer"
-                  }`}
+                  className="w-full appearance-none rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-xs sm:text-sm text-slate-800 focus:border-[#476ab8] focus:ring-1 focus:ring-[#476ab8] focus:outline-none transition-all pr-9 cursor-pointer"
                 >
-                  <option value="" disabled>
-                    {formData.shipmentLc ? "Select PO" : "Select LC first"}
-                  </option>
-                  {currentPoOptions.map((po) => (
-                    <option key={po} value={po}>
-                      {po}
-                    </option>
-                  ))}
+                  <option value="">Select PO</option>
+                  {availablePOs.length > 0 ? (
+                    availablePOs.map((po) => (
+                      <option key={po.id} value={po.id}>
+                        {po.poNumber} {po.buyer?.name ? `(${po.buyer.name})` : ""}
+                      </option>
+                    ))
+                  ) : (
+                    Object.values(poOptionsMap).flat().map((po) => (
+                      <option key={po} value={po}>
+                        {po}
+                      </option>
+                    ))
+                  )}
                 </select>
                 <ChevronsUpDown
                   size={15}
@@ -161,18 +263,24 @@ export function BasicInfo({
               </label>
               <div className="relative">
                 <select
-                  value={formData.buyer}
+                  value={formData.buyerId || formData.buyer}
                   onChange={(e) => updateField("buyer", e.target.value)}
                   className="w-full appearance-none rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-xs sm:text-sm text-slate-800 focus:border-[#476ab8] focus:ring-1 focus:ring-[#476ab8] focus:outline-none transition-all pr-9 cursor-pointer"
                 >
-                  <option value="" disabled>
-                    Select Buyer
-                  </option>
-                  {buyerOptions.map((b) => (
-                    <option key={b} value={b}>
-                      {b}
-                    </option>
-                  ))}
+                  <option value="">Select Buyer</option>
+                  {liveBuyers.length > 0 ? (
+                    liveBuyers.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {b.name} ({b.code})
+                      </option>
+                    ))
+                  ) : (
+                    buyerOptions.map((b) => (
+                      <option key={b} value={b}>
+                        {b}
+                      </option>
+                    ))
+                  )}
                 </select>
                 <ChevronDown
                   size={15}
@@ -181,29 +289,18 @@ export function BasicInfo({
               </div>
             </div>
 
-            {/* To */}
+            {/* To / Destination Location */}
             <div>
               <label className="block text-xs font-medium text-slate-800 mb-1.5">
-                To
+                Destination Store / Delivery Point
               </label>
               <div className="relative">
-                <select
+                <input
+                  type="text"
                   value={formData.toLocation}
                   onChange={(e) => updateField("toLocation", e.target.value)}
-                  className="w-full appearance-none rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-xs sm:text-sm text-slate-800 focus:border-[#476ab8] focus:ring-1 focus:ring-[#476ab8] focus:outline-none transition-all pr-9 cursor-pointer"
-                >
-                  <option value="" disabled>
-                    Select Customer Location
-                  </option>
-                  {toLocationOptions.map((loc) => (
-                    <option key={loc} value={loc}>
-                      {loc}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown
-                  size={15}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+                  placeholder="e.g. Export Dock 3 / Buyer Central Hub"
+                  className="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-xs sm:text-sm text-slate-800 placeholder:text-slate-400 focus:border-[#476ab8] focus:ring-1 focus:ring-[#476ab8] focus:outline-none transition-all"
                 />
               </div>
             </div>
@@ -236,4 +333,3 @@ export function BasicInfo({
 
 export const StockOutBasicInfo = BasicInfo;
 export default BasicInfo;
-

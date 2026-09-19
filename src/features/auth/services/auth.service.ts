@@ -15,11 +15,13 @@ export async function login(credentials: LoginRequest): Promise<LoginResponse> {
   return res;
 }
 
+// Otp currntly not implemented. will be done later
 export async function verifyOtp(payload: VerifyOtpRequest): Promise<LoginResponse> {
   const res = await apiPost<LoginResponse>(API.auth.verifyOtp, payload);
   return res;
 }
 
+// Otp currntly not implemented. will be done later
 export async function resendOtp(email: string): Promise<{ message: string }> {
   return apiPost<{ message: string }>(API.auth.resendOtp, { email });
 }

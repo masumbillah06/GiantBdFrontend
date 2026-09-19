@@ -16,7 +16,7 @@ import { BuyerTable } from "@/features/crm/components/buyer-table";
 
 export default function BuyerPage() {
   return (
-    <TableProvider title="Customer Records" entityName="Customer">
+    <TableProvider title="Customer Records" entityName="Customer" newHref="/crm/buyer/new">
       <div className="min-h-20 w-full flex justify-between items-center bg-white shadow-sm rounded-xl">
         <div>
           <Breadcrumb

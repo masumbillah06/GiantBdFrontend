@@ -27,7 +27,7 @@ import { useColors } from "@/features/attributes/hooks/use-attributes";
 export default function ColorPage() {
   const { data = colorData, isLoading, error, refetch } = useColors();
   return (
-    <TableProvider title="Colors" entityName="Color">
+    <TableProvider title="Colors" entityName="Color" newHref="/attribute/color/new">
       <div className="min-h-20 w-full flex justify-between items-center bg-white shadow-sm rounded-xl">
         <div>
           <Breadcrumb

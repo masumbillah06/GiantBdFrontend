@@ -27,7 +27,7 @@ import { useCategories } from "@/features/attributes/hooks/use-attributes";
 export default function CategoryPage() {
   const { data = categoryData, isLoading, error, refetch } = useCategories();
   return (
-    <TableProvider title="Categories" entityName="Category">
+    <TableProvider title="Categories" entityName="Category" newHref="/attribute/category/new">
       <div className="min-h-20 w-full flex justify-between items-center bg-white shadow-sm rounded-xl">
         <div>
           <Breadcrumb

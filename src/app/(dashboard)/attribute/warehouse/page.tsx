@@ -27,7 +27,7 @@ import { useWarehouses } from "@/features/attributes/hooks/use-attributes";
 export default function WarehousePage() {
   const { data = warehouseData, isLoading, error, refetch } = useWarehouses();
   return (
-    <TableProvider title="Warehouses" entityName="Warehouse">
+    <TableProvider title="Warehouses" entityName="Warehouse" newHref="/attribute/warehouse/new">
       <div className="min-h-20 w-full flex justify-between items-center bg-white shadow-sm rounded-xl">
         <div>
           <Breadcrumb

@@ -27,7 +27,7 @@ import { useMaterials } from "@/features/attributes/hooks/use-attributes";
 export default function MaterialPage() {
   const { data = materialData, isLoading, error, refetch } = useMaterials();
   return (
-    <TableProvider title="Materials" entityName="Material">
+    <TableProvider title="Materials" entityName="Material" newHref="/attribute/material/new">
       <div className="min-h-20 w-full flex justify-between items-center bg-white shadow-sm rounded-xl">
         <div>
           <Breadcrumb

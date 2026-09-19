@@ -122,3 +122,60 @@ export interface StorageLocationRecord {
   createdAt?: string;
   updatedAt?: string;
 }
+
+export interface CreateCategoryInput {
+  name: string;
+  description?: string;
+  status?: string;
+}
+
+export interface CreateSubCategoryInput {
+  name: string;
+  categoryId: string;
+  description?: string;
+  status?: string;
+}
+
+export interface CreateMaterialInput {
+  name: string;
+  description?: string;
+  status?: string;
+}
+
+export interface CreateColorInput {
+  name: string;
+  code?: string;
+  description?: string;
+  status?: string;
+}
+
+export interface CreateWarehouseInput {
+  name: string;
+  code: string;
+  description?: string;
+  status?: string;
+}
+
+export interface CreateZoneInput {
+  name: string;
+  code: string;
+  warehouseId: string;
+  description?: string;
+  status?: string;
+}
+
+export interface CreateSubZoneInput {
+  name: string;
+  code: string;
+  zoneId: string;
+  description?: string;
+  status?: string;
+}
+
+export interface CreateRackInput {
+  name: string;
+  code: string;
+  subZoneId: string;
+  description?: string;
+  status?: string;
+}

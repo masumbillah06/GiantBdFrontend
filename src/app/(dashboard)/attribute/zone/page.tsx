@@ -27,7 +27,7 @@ import { useZones } from "@/features/attributes/hooks/use-attributes";
 export default function ZonePage() {
   const { data = zoneData, isLoading, error, refetch } = useZones();
   return (
-    <TableProvider title="Zones" entityName="Zone">
+    <TableProvider title="Zones" entityName="Zone" newHref="/attribute/zone/new">
       <div className="min-h-20 w-full flex justify-between items-center bg-white shadow-sm rounded-xl">
         <div>
           <Breadcrumb

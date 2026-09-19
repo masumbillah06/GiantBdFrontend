@@ -1,0 +1,147 @@
+"use client";
+
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import Breadcrumb from "@/components/ui/breadcrumb";
+import FormCard from "@/components/ui/form-card";
+import FormInput from "@/components/ui/form-input";
+import FormSelect from "@/components/ui/form-select";
+import FormActionBar from "@/components/ui/form-action-bar";
+import { useCreateCategory } from "@/features/attributes/hooks/use-attributes";
+
+export default function NewCategoryPage() {
+  const router = useRouter();
+  const [name, setName] = useState("");
+  const [status, setStatus] = useState("");
+  const [description, setDescription] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [serverError, setServerError] = useState<string | null>(null);
+
+  const createCategoryMutation = useCreateCategory();
+
+  const handleReset = () => {
+    setName("");
+    setStatus("");
+    setDescription("");
+    setErrors({});
+    setServerError(null);
+  };
+
+  const handleCancel = () => {
+    router.push("/attribute/category");
+  };
+
+  const handleSubmit = () => {
+    const newErrors: Record<string, string> = {};
+    if (!name.trim()) {
+      newErrors.name = "Category name is required";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    setErrors({});
+    setServerError(null);
+
+    createCategoryMutation.mutate(
+      {
+        name: name.trim(),
+        description: description.trim() || undefined,
+        status: status || "Active",
+      },
+      {
+        onSuccess: () => {
+          router.push("/attribute/category");
+        },
+        onError: (err: unknown) => {
+          const message =
+            err instanceof Error
+              ? err.message
+              : "Failed to create category. Please try again.";
+          setServerError(message);
+        },
+      }
+    );
+  };
+
+  return (
+    <div className="flex flex-col gap-6">
+      {/* Top Breadcrumb Card */}
+      <Breadcrumb
+        title="Attributes"
+        items={[
+          { label: "Attributes", href: "/attribute/category" },
+          { label: "Category", href: "/attribute/category" },
+          { label: "New" },
+        ]}
+        className="rounded-2xl border border-slate-200/90 shadow-xs"
+      />
+
+      {serverError && (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          {serverError}
+        </div>
+      )}
+
+      {/* Category Information Card */}
+      <FormCard title="Category Information">
+        <div className="flex flex-col gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FormInput
+              label="Category Name"
+              required
+              placeholder="Enter category name"
+              value={name}
+              onChange={(e) => {
+                setName(e.target.value);
+                if (errors.name) {
+                  setErrors((prev) => {
+                    const next = { ...prev };
+                    delete next.name;
+                    return next;
+                  });
+                }
+              }}
+              error={errors.name}
+            />
+
+            <FormSelect
+              label="Status"
+              placeholder="Select status"
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              options={[
+                { label: "Active", value: "Active" },
+                { label: "Inactive", value: "Inactive" },
+              ]}
+            />
+          </div>
+
+          <div className="w-full">
+            <FormInput
+              label="Description"
+              placeholder="Enter description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          </div>
+        </div>
+      </FormCard>
+
+      {/* Action Bar */}
+      <FormActionBar
+        onCancel={handleCancel}
+        onReset={handleReset}
+        onCreate={handleSubmit}
+        isLoading={createCategoryMutation.isPending}
+        loadingLabel="Creating..."
+        submitLabel="Create"
+        cancelLabel="Cancel"
+        resetLabel="Reset"
+      />
+    </div>
+  );
+}
+

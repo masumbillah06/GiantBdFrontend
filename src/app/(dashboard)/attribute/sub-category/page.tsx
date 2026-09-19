@@ -27,7 +27,7 @@ import { useSubCategories } from "@/features/attributes/hooks/use-attributes";
 export default function SubCategoryPage() {
   const { data = subCategoryData, isLoading, error, refetch } = useSubCategories();
   return (
-    <TableProvider title="Sub Categories" entityName="Sub Category">
+    <TableProvider title="Sub Categories" entityName="Sub Category" newHref="/attribute/sub-category/new">
       <div className="min-h-20 w-full flex justify-between items-center bg-white shadow-sm rounded-xl">
         <div>
           <Breadcrumb

@@ -27,7 +27,7 @@ import { useSubZones } from "@/features/attributes/hooks/use-attributes";
 export default function SubZonePage() {
   const { data = subZoneData, isLoading, error, refetch } = useSubZones();
   return (
-    <TableProvider title="Sub Zones" entityName="Sub Zone">
+    <TableProvider title="Sub Zones" entityName="Sub Zone" newHref="/attribute/sub-zone/new">
       <div className="min-h-20 w-full flex justify-between items-center bg-white shadow-sm rounded-xl">
         <div>
           <Breadcrumb

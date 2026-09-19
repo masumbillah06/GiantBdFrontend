@@ -27,7 +27,7 @@ import { useRacks } from "@/features/attributes/hooks/use-attributes";
 export default function RackPage() {
   const { data = rackData, isLoading, error, refetch } = useRacks();
   return (
-    <TableProvider title="Racks" entityName="Rack">
+    <TableProvider title="Racks" entityName="Rack" newHref="/attribute/rack/new">
       <div className="min-h-20 w-full flex justify-between items-center bg-white shadow-sm rounded-xl">
         <div>
           <Breadcrumb

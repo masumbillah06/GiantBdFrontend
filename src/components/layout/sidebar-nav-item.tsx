@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ChevronRight, ChevronDown } from "lucide-react";
 import type { NavItem } from "@/lib/constants/sidebar-nav-data";
@@ -10,9 +10,17 @@ function cx(...classes: Array<string | false | undefined>) {
   return classes.filter(Boolean).join(" ");
 }
 
+/** True if the item's href matches the pathname or if pathname is a sub-route (e.g. /new). */
+function isRouteActive(href: string | undefined, pathname: string): boolean {
+  if (!href) return false;
+  if (href === pathname) return true;
+  if (href !== "/" && pathname.startsWith(href + "/")) return true;
+  return false;
+}
+
 /** True if this item or any descendant matches the current path. */
 function branchIsActive(item: NavItem, pathname: string): boolean {
-  if (item.href === pathname) return true;
+  if (isRouteActive(item.href, pathname)) return true;
   return item.children?.some((child) => branchIsActive(child, pathname)) ?? false;
 }
 
@@ -33,11 +41,18 @@ export function SidebarNavItem({
   const isCollapsed = propIsCollapsed ?? contextIsCollapsed;
 
   const hasChildren = !!item.children?.length;
+  const isItemActive = isRouteActive(item.href, pathname);
   const isActiveBranch = branchIsActive(item, pathname);
-  const isExactActive = item.href === pathname;
 
   const [userOpen, setUserOpen] = useState<boolean | undefined>(undefined);
   const open = userOpen ?? isActiveBranch;
+
+  // Keep active branch open whenever navigating to a sub-route
+  useEffect(() => {
+    if (isActiveBranch) {
+      setUserOpen(true);
+    }
+  }, [isActiveBranch, pathname]);
 
   const Icon = item.icon;
   const paddingLeft = 10 + level * 2;
@@ -51,7 +66,7 @@ export function SidebarNavItem({
     "group flex w-full items-center rounded-xl transition-colors cursor-pointer",
     "focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E8A33D]/70",
     isCollapsed ? "justify-center py-2.5 px-0" : "gap-2.5 py-3 text-sm",
-    isExactActive
+    isItemActive
       ? "bg-[#476ab8] text-white font-medium"
       : isActiveBranch
         ? "bg-[#476ab8] font-medium text-white"
@@ -63,7 +78,7 @@ export function SidebarNavItem({
       <div>
         <Link
           href={item.href ?? "#"}
-          aria-current={isExactActive ? "page" : undefined}
+          aria-current={isItemActive ? "page" : undefined}
           title={isCollapsed ? item.label : undefined}
           onClick={(e) => {
             if (isCollapsed) {

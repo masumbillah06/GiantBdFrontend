@@ -28,7 +28,8 @@ export function FormCard({
   return (
     <div
       className={cn(
-        "w-full rounded-2xl border border-slate-200/90 bg-white shadow-xs overflow-hidden transition-all",
+        "w-full rounded-2xl border border-slate-200/90 bg-white shadow-xs transition-all",
+        isCollapsed ? "overflow-hidden" : "overflow-visible",
         className
       )}
     >
@@ -36,8 +37,8 @@ export function FormCard({
       <div
         className={cn(
           "flex items-center justify-between px-6 py-4 select-none",
-          collapsible && "cursor-pointer hover:bg-slate-50/40 transition-colors",
-          !isCollapsed && "border-b border-slate-100"
+          isCollapsed ? "rounded-2xl" : "rounded-t-2xl border-b border-slate-100",
+          collapsible && "cursor-pointer hover:bg-slate-50/40 transition-colors"
         )}
         onClick={collapsible ? () => setIsCollapsed(!isCollapsed) : undefined}
       >
@@ -73,7 +74,7 @@ export function FormCard({
 
       {/* Body */}
       {!isCollapsed && (
-        <div className={cn("p-6", contentClassName)}>
+        <div className={cn("p-6 rounded-b-2xl", contentClassName)}>
           {children}
         </div>
       )}

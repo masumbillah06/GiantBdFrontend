@@ -18,14 +18,13 @@ import { ActionButtonGroup } from "@/components/ui/buttons/action-button-group";
 import { ActionButton } from "@/components/ui/buttons/action-button";
 import { Eye, PenSquareIcon, Trash2 } from "lucide-react";
 import {
-  zoneData,
   columns,
   type ZoneRecord,
 } from "@/lib/mock-data/attributes/zone.mock";
 import { useZones, useZoneMutations } from "@/features/attributes/hooks/use-attributes";
 
 export default function ZonePage() {
-  const { data = zoneData, isLoading, error, refetch } = useZones();
+  const { data = [], isLoading, error, refetch } = useZones();
   const { deleteMut } = useZoneMutations();
   return (
     <TableProvider title="Zones" entityName="Zone" newHref="/attribute/zone/new">

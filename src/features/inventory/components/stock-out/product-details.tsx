@@ -46,7 +46,7 @@ export function ProductDetails({
   const {
     data: rawBatches = [],
     isLoading: isLoadingBatches,
-  } = useRawBatches({ enabled: !poId });
+  } = useRawBatches(undefined, { enabled: !poId });
 
   // Allocation state: batchItemId -> issueQty
   const [allocations, setAllocations] = useState<Record<string, number>>({});
@@ -351,7 +351,7 @@ export function ProductDetails({
               ) : rawBatches.length > 0 ? (
                 <div className="space-y-3">
                   {rawBatches.map((batch: any) => {
-                    const batchItems = batch.items || [];
+                    const batchItems = batch.batchItems || batch.items || [];
                     if (batchItems.length === 0) return null;
 
                     return (

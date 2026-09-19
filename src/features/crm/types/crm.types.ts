@@ -105,8 +105,8 @@ export interface PO {
 
 export interface CreatePODTO {
   poNumber: string;
-  buyerId: string;
-  lcId?: string;
+  lcId: string;
+  buyerId?: string;
   orderDate?: string;
   deliveryDate?: string;
   remarks?: string;

@@ -16,13 +16,16 @@ import FilterCard from "@/components/ui/filter-card";
 import PaginatedTable from "@/components/ui/table/paginated-table";
 import { ActionButton } from "@/components/ui/buttons/action-button";
 import { ActionButtonGroup } from "@/components/ui/buttons/action-button-group";
-import { Eye, FileText, Truck, Package } from "lucide-react";
+import { Eye, FileText, Truck, Package, CheckCircle, XCircle } from "lucide-react";
 import { stockOutColumns } from "@/lib/mock-data/inventory/stockout-list.mock";
 import { useStockOutList } from "@/features/inventory/hooks/use-stock-out-list";
+import { useCancelStockOutMutation, useStockOutStatusMutation } from "@/features/inventory/hooks/use-stock-out";
 import type { StockOutItem } from "@/features/inventory/types/inventory.types";
 
 export default function StockOutListPage() {
   const { data = [], isLoading, error, refetch } = useStockOutList();
+  const cancelMut = useCancelStockOutMutation();
+  const statusMut = useStockOutStatusMutation();
 
   return (
     <TableProvider
@@ -88,17 +91,35 @@ export default function StockOutListPage() {
               {row.status === "Issued" && (
                 <>
                   <ActionButton
-                    label="View Delivery Note"
-                    icon={FileText}
+                    label="Mark as Delivered"
+                    icon={CheckCircle}
+                    className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
                     onClick={() => {
-                      notify(`Delivery note for PO: ${row.poNo}`);
+                      if (confirm(`Confirm delivery for Challan #${row.challanNumber || row.id}?`)) {
+                        statusMut.mutate(
+                          { id: String(row.id), status: "DELIVERED" },
+                          {
+                            onSuccess: () => notify(`Challan #${row.challanNumber || row.id} marked as DELIVERED`),
+                            onError: (err: any) => notify(err?.message || "Failed to update status"),
+                          }
+                        );
+                      }
                     }}
                   />
                   <ActionButton
-                    label="Track Dispatch"
-                    icon={Truck}
+                    label="Cancel Challan (Reverse Inventory)"
+                    icon={XCircle}
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
                     onClick={() => {
-                      notify(`Tracking dispatch for LC: ${row.lcNo}`);
+                      if (confirm(`Cancel Challan #${row.challanNumber || row.id}? This will restore all inventory.`)) {
+                        cancelMut.mutate(
+                          { id: String(row.id), note: "Cancelled by user" },
+                          {
+                            onSuccess: () => notify(`Challan #${row.challanNumber || row.id} CANCELLED. Inventory restored.`),
+                            onError: (err: any) => notify(err?.message || "Failed to cancel challan"),
+                          }
+                        );
+                      }
                     }}
                   />
                 </>

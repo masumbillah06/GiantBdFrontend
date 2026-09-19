@@ -17,15 +17,47 @@ import PaginatedTable from "@/components/ui/table/paginated-table";
 import { ActionButtonGroup } from "@/components/ui/buttons/action-button-group";
 import { ActionButton } from "@/components/ui/buttons/action-button";
 import { Eye, PenSquareIcon, Trash2 } from "lucide-react";
-import {
-  colorData,
-  columns,
-  type ColorRecord,
-} from "@/lib/mock-data/attributes/color.mock";
+import type { ColumnDef } from "@/components/ui/table/ReusableTable.types";
+import { type ColorRecord } from "@/features/attributes/types/attribute.types";
 import { useColors, useColorMutations } from "@/features/attributes/hooks/use-attributes";
 
+const colorColumns: ColumnDef<ColorRecord>[] = [
+  { key: "name", label: "Color Name", sortable: true },
+  {
+    key: "code",
+    label: "Color Code / Preview",
+    render: (row) => (
+      <div className="flex items-center gap-2">
+        {row.code ? (
+          <span
+            className="w-4 h-4 rounded-full border border-slate-300 inline-block shadow-xs shrink-0"
+            style={{ backgroundColor: row.code }}
+          />
+        ) : null}
+        <span className="font-mono text-xs">{row.code || "-"}</span>
+      </div>
+    ),
+  },
+  { key: "description", label: "Description" },
+  {
+    key: "status",
+    label: "Status",
+    render: (row) => (
+      <span
+        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+          row.status === "INACTIVE"
+            ? "bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-400"
+            : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400"
+        }`}
+      >
+        {row.status || "ACTIVE"}
+      </span>
+    ),
+  },
+];
+
 export default function ColorPage() {
-  const { data = colorData, isLoading, error, refetch } = useColors();
+  const { data = [], isLoading, error, refetch } = useColors();
   const { deleteMut } = useColorMutations();
   return (
     <TableProvider title="Colors" entityName="Color" newHref="/attribute/color/new">
@@ -56,7 +88,7 @@ export default function ColorPage() {
       <div className="mt-4">
         <PaginatedTable<ColorRecord>
           data={data}
-          columns={columns}
+          columns={colorColumns}
           minWidth="800px"
           actionsLabel="Action"
           isLoading={isLoading}

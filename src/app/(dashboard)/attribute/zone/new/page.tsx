@@ -12,7 +12,6 @@ import {
   useWarehouses,
   useCreateZone,
 } from "@/features/attributes/hooks/use-attributes";
-import { warehouseData } from "@/lib/mock-data/attributes/warehouse.mock";
 
 export default function NewZonePage() {
   const router = useRouter();
@@ -24,7 +23,7 @@ export default function NewZonePage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [serverError, setServerError] = useState<string | null>(null);
 
-  const { data: warehouses = warehouseData, isLoading: isWarehousesLoading } =
+  const { data: warehouses = [], isLoading: isWarehousesLoading } =
     useWarehouses();
   const createZoneMutation = useCreateZone();
 

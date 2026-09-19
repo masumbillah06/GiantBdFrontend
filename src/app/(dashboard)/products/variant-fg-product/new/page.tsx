@@ -18,8 +18,6 @@ import {
   useMasterProducts,
   useVariantMutations,
 } from "@/features/products/hooks/use-master-products";
-import { colorData } from "@/lib/mock-data/attributes/color.mock";
-import { masterProductData } from "@/lib/mock-data/products/master-products.mock";
 import type { ProductGender, UnitOfMeasurement } from "@/features/products/types/product.types";
 
 const DEFAULT_SIZES = ["39", "40", "41", "42", "43", "44", "45", "46", "47", "48"];
@@ -97,17 +95,11 @@ export default function NewVariantFGProductPage() {
 
   // Selected details for SKU generation
   const selectedMaster = useMemo(() => {
-    return (
-      serverMasterProducts?.find((p) => String(p.id) === formState.masterProductId) ||
-      masterProductData.find((p) => String(p.id) === formState.masterProductId)
-    );
+    return serverMasterProducts?.find((p) => String(p.id) === formState.masterProductId);
   }, [serverMasterProducts, formState.masterProductId]);
 
   const selectedColor = useMemo(() => {
-    return (
-      serverColors?.find((c) => String(c.id) === formState.colorId) ||
-      colorData.find((c) => String(c.id) === formState.colorId)
-    );
+    return serverColors?.find((c) => String(c.id) === formState.colorId);
   }, [serverColors, formState.colorId]);
 
   // Derived Auto SKU

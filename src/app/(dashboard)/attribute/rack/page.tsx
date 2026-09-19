@@ -18,14 +18,13 @@ import { ActionButtonGroup } from "@/components/ui/buttons/action-button-group";
 import { ActionButton } from "@/components/ui/buttons/action-button";
 import { Eye, PenSquareIcon, Trash2 } from "lucide-react";
 import {
-  rackData,
   columns,
   type RackRecord,
 } from "@/lib/mock-data/attributes/rack.mock";
 import { useRacks, useRackMutations } from "@/features/attributes/hooks/use-attributes";
 
 export default function RackPage() {
-  const { data = rackData, isLoading, error, refetch } = useRacks();
+  const { data = [], isLoading, error, refetch } = useRacks();
   const { deleteMut } = useRackMutations();
   return (
     <TableProvider title="Racks" entityName="Rack" newHref="/attribute/rack/new">

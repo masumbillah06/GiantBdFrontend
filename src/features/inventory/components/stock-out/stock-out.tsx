@@ -176,12 +176,13 @@ export function StockOut() {
         handleReset();
       },
       onError: (err: any) => {
-        const msg =
-          err?.response?.data?.message ||
-          (Array.isArray(err?.response?.data?.errors)
-            ? err.response.data.errors.join(", ")
-            : err.message) ||
-          "Failed to execute stock out.";
+        const resData = err?.response?.data;
+        let msg = "Failed to execute stock out.";
+        if (resData?.message) {
+          msg = Array.isArray(resData.message) ? resData.message.join(", ") : resData.message;
+        } else if (err?.message) {
+          msg = err.message;
+        }
         setMessage({ type: "error", text: msg });
       },
     });

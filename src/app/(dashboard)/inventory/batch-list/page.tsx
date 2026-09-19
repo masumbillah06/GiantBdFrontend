@@ -23,6 +23,7 @@ import type { BatchItem } from "@/features/inventory/types/inventory.types";
 
 export default function BatchListPage() {
   const { data = [], isLoading, error, refetch } = useBatchList();
+  const displayData = data;
 
   return (
     <TableProvider
@@ -30,7 +31,8 @@ export default function BatchListPage() {
       entityName="Batch"
       onReload={() => refetch()}
       isLoading={isLoading}
-      newButtonLabel="New Batch"
+      newHref="/inventory/stock-in"
+      newButtonLabel="New Stock In"
     >
       {/* ── Breadcrumb Bar with Table Actions ── */}
       <div className="min-h-20 w-full flex justify-between items-center bg-white shadow-sm rounded-xl">
@@ -65,7 +67,7 @@ export default function BatchListPage() {
       {/* ── Batch Table with Pagination ── */}
       <div className="mt-4">
         <PaginatedTable<BatchItem>
-          data={data}
+          data={displayData}
           columns={batchColumns}
           minWidth="1200px"
           actionsLabel="Action"

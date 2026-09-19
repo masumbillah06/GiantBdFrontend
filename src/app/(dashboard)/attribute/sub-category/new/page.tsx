@@ -12,7 +12,6 @@ import {
   useCategories,
   useCreateSubCategory,
 } from "@/features/attributes/hooks/use-attributes";
-import { categoryData } from "@/lib/mock-data/attributes/category.mock";
 
 export default function NewSubCategoryPage() {
   const router = useRouter();
@@ -23,7 +22,7 @@ export default function NewSubCategoryPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [serverError, setServerError] = useState<string | null>(null);
 
-  const { data: categories = categoryData, isLoading: isCategoriesLoading } =
+  const { data: categories = [], isLoading: isCategoriesLoading } =
     useCategories();
   const createSubCategoryMutation = useCreateSubCategory();
 

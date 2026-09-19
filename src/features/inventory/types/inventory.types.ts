@@ -186,13 +186,24 @@ export interface StockOutProductItem {
 export interface BatchItem {
   id: string | number;
   batchId: string;
+  batchNumber?: string;
   stockInDate: string;
   productName: string;
+  sku?: string;
+  color?: string;
+  colorCode?: string;
+  gender?: string;
   material: string;
   quantity: number;
+  inHandQty?: number;
+  receivedQty?: number;
+  cartons?: number;
+  itemsPerPacket?: number;
   pkgQty: number;
   createdBy: string;
   productionDate: string;
+  ageInDays?: number | null;
+  locationCode?: string;
   raw?: BackendBatch;
 }
 
@@ -213,18 +224,61 @@ export interface StockOutItem {
 
 // Adapters
 export function adaptBatchToItem(batch: BackendBatch): BatchItem {
-  const firstItem = batch.items?.[0];
-  const totalQty = batch.items?.reduce((sum, item) => sum + (item.totalQuantity || item.availableQty || 0), 0) || 0;
+  const itemsList: any[] = (batch as any).batchItems || batch.items || [];
+  const firstItem = itemsList[0];
+
+  const summary = (batch as any).summary;
+  const totalReceived =
+    summary?.totalReceivedQty ??
+    itemsList.reduce((sum, item) => sum + (item.receivedQty ?? item.totalQuantity ?? 0), 0);
+  const totalInHand =
+    summary?.totalAvailableQty ??
+    itemsList.reduce((sum, item) => sum + (item.availableQty ?? item.totalQuantity ?? 0), 0);
+  const totalCartons =
+    summary?.totalPackets ??
+    itemsList.reduce((sum, item) => sum + (item.packetCount ?? 0), 0);
+
+  const colorName = firstItem?.product?.color?.name || 'Standard';
+  const colorCode = firstItem?.product?.color?.code;
+  const gender = firstItem?.product?.gender || 'MALE';
+  const material =
+    firstItem?.product?.masterProduct?.material?.name ||
+    (typeof firstItem?.product?.masterProduct?.material === 'string'
+      ? firstItem.product.masterProduct.material
+      : 'Standard');
+  const productName =
+    firstItem?.product?.masterProduct?.name ||
+    firstItem?.product?.name ||
+    'Finished Goods';
+
+  // Calculate age in days
+  const prodDate = batch.productionDate ? new Date(batch.productionDate) : null;
+  const ageInDays =
+    prodDate && !isNaN(prodDate.getTime())
+      ? Math.max(0, Math.floor((Date.now() - prodDate.getTime()) / (1000 * 60 * 60 * 24)))
+      : null;
+
   return {
     id: batch.id,
-    batchId: batch.batch_id || batch.batch_number || batch.id.slice(0, 8),
-    stockInDate: batch.createdAt ? new Date(batch.createdAt).toLocaleDateString() : 'N/A',
-    productName: firstItem?.product?.name || 'Various Variants',
-    material: firstItem?.product?.masterProduct?.material?.name || 'Standard',
-    quantity: totalQty,
-    pkgQty: firstItem?.itemsPerPacket || 1,
+    batchId: batch.batch_id || batch.batch_number || String(batch.id).slice(0, 8),
+    batchNumber: batch.batch_number || undefined,
+    productName,
+    sku: firstItem?.product?.sku || firstItem?.product?.masterProduct?.sku,
+    color: colorName,
+    colorCode,
+    gender,
+    material,
+    quantity: totalReceived,
+    inHandQty: totalInHand,
+    receivedQty: totalReceived,
+    cartons: totalCartons || Math.ceil(totalReceived / (firstItem?.itemsPerPacket || 10)) || 1,
+    itemsPerPacket: firstItem?.itemsPerPacket || 1,
+    pkgQty: totalCartons || 1,
     createdBy: 'Warehouse Team',
     productionDate: batch.productionDate ? new Date(batch.productionDate).toLocaleDateString() : 'N/A',
+    ageInDays,
+    stockInDate: batch.createdAt ? new Date(batch.createdAt).toLocaleDateString() : 'N/A',
+    locationCode: firstItem?.location?.code || firstItem?.location?.rack?.code,
     raw: batch,
   };
 }

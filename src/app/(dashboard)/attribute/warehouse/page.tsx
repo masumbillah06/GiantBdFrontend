@@ -18,14 +18,13 @@ import { ActionButtonGroup } from "@/components/ui/buttons/action-button-group";
 import { ActionButton } from "@/components/ui/buttons/action-button";
 import { Eye, PenSquareIcon, Trash2 } from "lucide-react";
 import {
-  warehouseData,
   columns,
   type WarehouseRecord,
 } from "@/lib/mock-data/attributes/warehouse.mock";
 import { useWarehouses, useWarehouseMutations } from "@/features/attributes/hooks/use-attributes";
 
 export default function WarehousePage() {
-  const { data = warehouseData, isLoading, error, refetch } = useWarehouses();
+  const { data = [], isLoading, error, refetch } = useWarehouses();
   const { deleteMut } = useWarehouseMutations();
   return (
     <TableProvider title="Warehouses" entityName="Warehouse" newHref="/attribute/warehouse/new">

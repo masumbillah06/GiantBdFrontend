@@ -268,19 +268,11 @@ export function BasicInfo({
                   className="w-full appearance-none rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-xs sm:text-sm text-slate-800 focus:border-[#476ab8] focus:ring-1 focus:ring-[#476ab8] focus:outline-none transition-all pr-9 cursor-pointer"
                 >
                   <option value="">Select Buyer</option>
-                  {liveBuyers.length > 0 ? (
-                    liveBuyers.map((b) => (
-                      <option key={b.id} value={b.id}>
-                        {b.name} ({b.code})
-                      </option>
-                    ))
-                  ) : (
-                    buyerOptions.map((b) => (
-                      <option key={b} value={b}>
-                        {b}
-                      </option>
-                    ))
-                  )}
+                  {liveBuyers.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.name} ({b.code || 'N/A'})
+                    </option>
+                  ))}
                 </select>
                 <ChevronDown
                   size={15}

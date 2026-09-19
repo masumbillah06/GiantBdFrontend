@@ -16,18 +16,15 @@ import {
   useMaterials,
 } from "@/features/attributes/hooks/use-attributes";
 import { useMasterProductMutations } from "@/features/products/hooks/use-master-products";
-import { categoryData } from "@/lib/mock-data/attributes/category.mock";
-import { subCategoryData } from "@/lib/mock-data/attributes/sub-category.mock";
-import { materialData } from "@/lib/mock-data/attributes/material.mock";
 
 export default function NewMasterFGProductPage() {
   const router = useRouter();
   const { createMut } = useMasterProductMutations();
 
-  // Fetch attribute options with mock data fallbacks
-  const { data: serverCategories } = useCategories();
-  const { data: serverSubCategories } = useSubCategories();
-  const { data: serverMaterials } = useMaterials();
+  // Fetch live attribute options
+  const { data: serverCategories = [] } = useCategories();
+  const { data: serverSubCategories = [] } = useSubCategories();
+  const { data: serverMaterials = [] } = useMaterials();
 
   const [formState, setFormState] = useState({
     name: "",
@@ -44,11 +41,7 @@ export default function NewMasterFGProductPage() {
 
   // Category options
   const categoryOptions = useMemo(() => {
-    const list =
-      serverCategories && serverCategories.length > 0
-        ? serverCategories
-        : categoryData;
-    return list.map((c) => ({
+    return serverCategories.map((c) => ({
       label: c.name,
       value: String(c.id),
     }));
@@ -56,18 +49,13 @@ export default function NewMasterFGProductPage() {
 
   // SubCategory options (filtered by selected category)
   const subCategoryOptions = useMemo(() => {
-    const list =
-      serverSubCategories && serverSubCategories.length > 0
-        ? serverSubCategories
-        : subCategoryData;
-
     const filtered = formState.categoryId
-      ? list.filter(
+      ? serverSubCategories.filter(
           (sc: any) =>
             String(sc.categoryId) === String(formState.categoryId) ||
             String(sc.category?.id) === String(formState.categoryId)
         )
-      : list;
+      : serverSubCategories;
 
     return filtered.map((sc: any) => ({
       label: sc.name,
@@ -77,11 +65,7 @@ export default function NewMasterFGProductPage() {
 
   // Material options
   const materialOptions = useMemo(() => {
-    const list =
-      serverMaterials && serverMaterials.length > 0
-        ? serverMaterials
-        : materialData;
-    return list.map((m) => ({
+    return serverMaterials.map((m) => ({
       label: m.name,
       value: String(m.id),
     }));

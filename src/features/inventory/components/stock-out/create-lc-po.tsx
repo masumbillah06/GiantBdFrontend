@@ -39,37 +39,45 @@ export function CreateLcPo({
   // Handle LC Creation
   const handleCreateLc = async () => {
     const trimmedLc = lcNo.trim();
-    if (!trimmedLc) return;
+    if (!trimmedLc) {
+      setLcFeedback({ type: "error", text: "Please enter an LC number." });
+      return;
+    }
+    if (!buyerId) {
+      setLcFeedback({ type: "error", text: "Please select a Buyer for this LC." });
+      return;
+    }
 
     try {
-      // Find matching live buyer
       const selectedBuyer = liveBuyers.find((b) => b.id === buyerId || b.name === buyerId);
-      const buyerName = selectedBuyer ? selectedBuyer.name : (buyerId || "Buyer");
-      const targetBuyerId = selectedBuyer?.id || liveBuyers[0]?.id || "default-buyer";
+      if (!selectedBuyer) {
+        setLcFeedback({ type: "error", text: "Please select a valid Buyer." });
+        return;
+      }
 
       const defaultExpiry = new Date();
       defaultExpiry.setFullYear(defaultExpiry.getFullYear() + 1);
 
       const createdLc = await createLcMut.mutateAsync({
         lcNumber: trimmedLc,
-        buyerId: targetBuyerId,
+        buyerId: selectedBuyer.id,
         expiryDate: defaultExpiry.toISOString(),
       });
 
       onLcCreate?.({
         lcNo: createdLc.lcNumber,
-        buyer: buyerName,
+        buyer: selectedBuyer.name,
         lcId: createdLc.id,
-        buyerId: targetBuyerId,
+        buyerId: selectedBuyer.id,
       });
 
-      setLcFeedback({ type: "success", text: `LC "${trimmedLc}" created!` });
+      setLcFeedback({ type: "success", text: `LC "${trimmedLc}" created successfully!` });
       setLcNo("");
       setBuyerId("");
       setTimeout(() => setLcFeedback(null), 4000);
     } catch (err: any) {
       const msg = err?.response?.data?.message || err.message || "Failed to create LC";
-      setLcFeedback({ type: "error", text: msg });
+      setLcFeedback({ type: "error", text: Array.isArray(msg) ? msg.join(", ") : msg });
       setTimeout(() => setLcFeedback(null), 5000);
     }
   };
@@ -77,47 +85,55 @@ export function CreateLcPo({
   // Handle PO Creation
   const handleCreatePo = async () => {
     const trimmedPo = poNo.trim();
-    if (!trimmedPo) return;
+    if (!trimmedPo) {
+      setPoFeedback({ type: "error", text: "Please enter a PO number." });
+      return;
+    }
+    if (!selectedLcId) {
+      setPoFeedback({ type: "error", text: "Please select an LC for this PO." });
+      return;
+    }
 
     try {
-      // Find matching live LC
       const matchedLc = liveLCs.find((l) => l.id === selectedLcId || l.lcNumber === selectedLcId);
-      const lcNumber = matchedLc ? matchedLc.lcNumber : selectedLcId;
-      const targetBuyerId = matchedLc?.buyerId || liveBuyers[0]?.id || "default-buyer";
+      if (!matchedLc) {
+        setPoFeedback({ type: "error", text: "Selected LC not found. Please select an active LC." });
+        return;
+      }
 
       const createdPo = await createPoMut.mutateAsync({
         poNumber: trimmedPo,
-        buyerId: targetBuyerId,
-        lcId: matchedLc?.id || undefined,
+        buyerId: matchedLc.buyerId || undefined,
+        lcId: matchedLc.id,
       });
 
       onPoCreate?.({
         poNo: createdPo.poNumber,
-        lc: lcNumber,
+        lc: matchedLc.lcNumber,
         poId: createdPo.id,
-        lcId: matchedLc?.id,
+        lcId: matchedLc.id,
       });
 
-      setPoFeedback({ type: "success", text: `PO "${trimmedPo}" created!` });
+      setPoFeedback({ type: "success", text: `PO "${trimmedPo}" created successfully!` });
       setPoNo("");
       setSelectedLcId("");
       setTimeout(() => setPoFeedback(null), 4000);
     } catch (err: any) {
       const msg = err?.response?.data?.message || err.message || "Failed to create PO";
-      setPoFeedback({ type: "error", text: msg });
+      setPoFeedback({ type: "error", text: Array.isArray(msg) ? msg.join(", ") : msg });
       setTimeout(() => setPoFeedback(null), 5000);
     }
   };
 
-  const effectiveBuyerOptions =
-    liveBuyers.length > 0
-      ? liveBuyers.map((b) => ({ id: b.id, name: b.name }))
-      : buyerOptions.map((b) => ({ id: b, name: b }));
+  const effectiveBuyerOptions = liveBuyers.map((b) => ({
+    id: b.id,
+    name: b.name ? `${b.name} (${b.code || 'N/A'})` : b.id,
+  }));
 
-  const effectiveLcOptions =
-    liveLCs.length > 0
-      ? liveLCs.map((l) => ({ id: l.id, lcNumber: l.lcNumber }))
-      : lcOptions.map((l) => ({ id: l, lcNumber: l }));
+  const effectiveLcOptions = liveLCs.map((l) => ({
+    id: l.id,
+    lcNumber: l.lcNumber,
+  }));
 
   return (
     <div className="w-full rounded-2xl border border-slate-200/90 bg-white shadow-xs">

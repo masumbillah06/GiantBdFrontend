@@ -12,7 +12,6 @@ import {
   useZones,
   useCreateSubZone,
 } from "@/features/attributes/hooks/use-attributes";
-import { zoneData } from "@/lib/mock-data/attributes/zone.mock";
 
 export default function NewSubZonePage() {
   const router = useRouter();
@@ -24,7 +23,7 @@ export default function NewSubZonePage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [serverError, setServerError] = useState<string | null>(null);
 
-  const { data: zones = zoneData, isLoading: isZonesLoading } = useZones();
+  const { data: zones = [], isLoading: isZonesLoading } = useZones();
   const createSubZoneMutation = useCreateSubZone();
 
   const zoneOptions = useMemo(() => {

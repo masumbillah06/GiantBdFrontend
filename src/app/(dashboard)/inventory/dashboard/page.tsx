@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import Breadcrumb from "@/components/ui/breadcrumb";
 import { ChartBarDefault } from "@/features/dashboard/components/bar-chart";
 import { ChartPieDonut } from "@/features/dashboard/components/donut-chart";
@@ -8,15 +9,38 @@ import { ChartPieSimple } from "@/features/dashboard/components/pie-chart";
 import StatCard from "@/features/dashboard/components/stat-card";
 import ReusableTable from "@/components/ui/table/ReusableTable";
 import {
-  stockInData,
   stockInColumns,
-  requisitionData,
   requisitionColumns,
   renderRequisitionActions,
 } from "@/lib/mock-data/dashboard/dashboard.mock";
 import type { StockInRow, RequisitionRow } from "@/features/dashboard/types/dashboard.types";
+import {
+  useDashboardMetrics,
+  useDashboardStockIn,
+  useDashboardRequisitions,
+} from "@/features/dashboard/hooks/use-dashboard-stats";
 
 export default function Dashboard() {
+  const { data: metrics, isLoading: isMetricsLoading } = useDashboardMetrics();
+  const { data: stockInData = [], isLoading: isStockInLoading } = useDashboardStockIn();
+  const { data: requisitionData = [], isLoading: isReqLoading } = useDashboardRequisitions();
+
+  const kpi = metrics?.kpi;
+
+  // Format movement trend items for the line chart
+  const movementTrendData = metrics?.movementTrends?.map((m) => ({
+    date: m.month,
+    stockIn: m.stockIn,
+    stockOut: m.stockOut,
+  }));
+
+  // Format PO distribution for donut chart
+  const poDonutData = metrics?.poDistribution?.map((p) => ({
+    name: p.name,
+    value: p.count,
+    fill: p.color,
+  }));
+
   return (
     <>
       <div>
@@ -29,20 +53,45 @@ export default function Dashboard() {
         />
       </div>
       <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <StatCard title="Daily In" value="0" unit="Pairs" breakdown="0 Bat | 0 Mas | 0 Var" trend="up" />
-        <StatCard title="Weekly In" value="30" unit="Pairs" breakdown="1 Bat | 1 Mas | 2 Var" trend="up" />
-        <StatCard title="Monthly In" value="148,016" unit="Pairs" breakdown="5 Bat | 3 Mas | 28 Var" trend="up" />
-        <StatCard title="Yearly In" value="21,795,941" unit="Pairs" breakdown="41 Bat | 12 Mas | 271 Var" trend="up" />
-        <StatCard title="Total In" value="21,795,941" unit="Pairs" breakdown="41 Bat | 12 Mas | 271 Var" trend="up" />
-        <StatCard title="Daily Out" value="0" unit="Pairs" breakdown="0 Bat | 0 Mas | 0 Var" trend="down" />
-        <StatCard title="Weekly Out" value="519" unit="Pairs" breakdown="3 Bat | 2 Mas | 4 Var" trend="down" />
-        <StatCard title="Monthly Out" value="735" unit="Pairs" breakdown="4 Bat | 3 Mas | 12 Var" trend="down" />
-        <StatCard title="Yearly Out" value="147,126" unit="Pairs" breakdown="27 Bat | 11 Mas | 92 Var" trend="down" />
-        <StatCard title="Total Out" value="147,126" unit="Pairs" breakdown="27 Bat | 11 Mas | 92 Var" trend="down" />
+        <StatCard
+          title="Total Stock"
+          value={isMetricsLoading ? "..." : (kpi?.totalStockPairs ?? 0).toLocaleString()}
+          unit="Pairs"
+          breakdown="Current Available Stock"
+          trend="up"
+        />
+        <StatCard
+          title="Today In"
+          value={isMetricsLoading ? "..." : String(kpi?.todayStockInBatches ?? 0)}
+          unit="Batches"
+          breakdown="Received Today"
+          trend="up"
+        />
+        <StatCard
+          title="Today Out"
+          value={isMetricsLoading ? "..." : String(kpi?.todayStockOutChallans ?? 0)}
+          unit="Challans"
+          breakdown="Dispatched Today"
+          trend="down"
+        />
+        <StatCard
+          title="Active POs"
+          value={isMetricsLoading ? "..." : String(kpi?.activePoCount ?? 0)}
+          unit="POs"
+          breakdown="Production in progress"
+          trend="up"
+        />
+        <StatCard
+          title="PO Fulfillment"
+          value={isMetricsLoading ? "..." : `${kpi?.poFulfillmentRate ?? 100}%`}
+          unit="Rate"
+          breakdown="Completed vs Total"
+          trend="up"
+        />
       </div>
       {/* Main Inventory Trends Chart */}
       <div className="mt-4 h-[340px] w-full">
-        <ChartLineMultiple />
+        <ChartLineMultiple data={movementTrendData} />
       </div>
 
       {/* Inventory Breakdown Charts */}
@@ -51,7 +100,7 @@ export default function Dashboard() {
           <ChartBarDefault />
         </div>
         <div className="h-[280px] lg:h-full w-full">
-          <ChartPieDonut />
+          <ChartPieDonut title="PO Status Breakdown" data={poDonutData} />
         </div>
         <div className="h-[280px] lg:h-full w-full">
           <ChartPieSimple />
@@ -66,12 +115,12 @@ export default function Dashboard() {
             <div className="bg-white h-7 w-auto px-3 flex items-center justify-center rounded-md shadow-sm">
               <h2 className="text-sm font-bold text-slate-900">Recent FG Stock In</h2>
             </div>
-            <button
-              type="button"
+            <Link
+              href="/inventory/stock-out"
               className="rounded-md bg-indigo-500 px-4 py-1.5 text-sm font-semibold text-white hover:bg-indigo-600 transition-colors cursor-pointer"
             >
-              + New
-            </button>
+              + Stock Out
+            </Link>
           </div>
 
           <ReusableTable<StockInRow>
@@ -82,6 +131,7 @@ export default function Dashboard() {
             idLabel="ID"
             showActions={false}
             minWidth="1100px"
+            isLoading={isStockInLoading}
           />
         </div>
 
@@ -89,7 +139,7 @@ export default function Dashboard() {
         <div className="rounded-xl bg-[var(--color-bg)] overflow-hidden mt-4">
           <div className="flex items-center justify-between py-4">
             <div className="bg-white h-7 w-auto px-3 flex items-center justify-center rounded-md shadow-sm">
-              <h2 className="text-sm font-bold text-slate-900">Requsition For Shipment</h2>
+              <h2 className="text-sm font-bold text-slate-900">Requisitions / Dispatches</h2>
             </div>
           </div>
 
@@ -103,6 +153,7 @@ export default function Dashboard() {
             actionsLabel="Action"
             renderActions={renderRequisitionActions}
             minWidth="1200px"
+            isLoading={isReqLoading}
           />
         </div>
       </div>

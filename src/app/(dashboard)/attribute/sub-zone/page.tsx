@@ -18,14 +18,13 @@ import { ActionButtonGroup } from "@/components/ui/buttons/action-button-group";
 import { ActionButton } from "@/components/ui/buttons/action-button";
 import { Eye, PenSquareIcon, Trash2 } from "lucide-react";
 import {
-  subZoneData,
   columns,
   type SubZoneRecord,
 } from "@/lib/mock-data/attributes/sub-zone.mock";
 import { useSubZones, useSubZoneMutations } from "@/features/attributes/hooks/use-attributes";
 
 export default function SubZonePage() {
-  const { data = subZoneData, isLoading, error, refetch } = useSubZones();
+  const { data = [], isLoading, error, refetch } = useSubZones();
   const { deleteMut } = useSubZoneMutations();
   return (
     <TableProvider title="Sub Zones" entityName="Sub Zone" newHref="/attribute/sub-zone/new">

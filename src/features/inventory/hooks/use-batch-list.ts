@@ -11,10 +11,14 @@ export function useBatchList(params?: Record<string, any>) {
   });
 }
 
-export function useRawBatches(params?: Record<string, any>) {
+export function useRawBatches(
+  params?: Record<string, any>,
+  options?: { enabled?: boolean }
+) {
   return useQuery({
     queryKey: ["inventory", "batches", "raw", params],
     queryFn: () => getRawBatches(params),
+    enabled: options?.enabled ?? true,
   });
 }
 

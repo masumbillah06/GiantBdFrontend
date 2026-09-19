@@ -26,14 +26,24 @@ const legendItems = [
   { label: "test000", fill: "#6366f1" },
 ]
 
-export function ChartPieDonut() {
+interface ChartPieDonutProps {
+  title?: string;
+  data?: Array<{ name: string; value: number; fill: string }>;
+}
+
+export function ChartPieDonut({ title = "Stock In : Master (30 Days)", data }: ChartPieDonutProps) {
+  const displayData = data && data.length > 0 ? data : chartData;
+  const currentLegend = data && data.length > 0 
+    ? data.map(d => ({ label: d.name, fill: d.fill }))
+    : legendItems;
+
   return (
     <div className="flex h-full w-full flex-col justify-between rounded-xl border border-slate-200/90 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-card">
       {/* Header with blue/purple bar indicator */}
       <div className="flex items-center gap-2 mb-1 shrink-0">
         <span className="h-4 w-1 rounded-full bg-[#4338ca]" />
         <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100">
-          Stock In : Master (30 Days)
+          {title}
         </h3>
       </div>
 
@@ -66,7 +76,7 @@ export function ChartPieDonut() {
               }}
             />
             <Pie
-              data={chartData}
+              data={displayData}
               dataKey="value"
               nameKey="name"
               innerRadius={44}
@@ -75,7 +85,7 @@ export function ChartPieDonut() {
               stroke="#ffffff"
               strokeWidth={2}
             >
-              {chartData.map((entry, index) => (
+              {displayData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={entry.fill} />
               ))}
             </Pie>
@@ -83,9 +93,9 @@ export function ChartPieDonut() {
         </ResponsiveContainer>
       </div>
 
-      {/* Legend matching the image */}
+      {/* Legend */}
       <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 pt-1 pb-0.5 text-[10px] text-slate-500 shrink-0">
-        {legendItems.map((item, index) => (
+        {currentLegend.map((item, index) => (
           <div key={index} className="flex items-center gap-1">
             <span
               className="h-2 w-2.5 shrink-0 rounded-[1px]"

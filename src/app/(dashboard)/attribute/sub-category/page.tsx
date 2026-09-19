@@ -18,14 +18,13 @@ import { ActionButtonGroup } from "@/components/ui/buttons/action-button-group";
 import { ActionButton } from "@/components/ui/buttons/action-button";
 import { Eye, PenSquareIcon, Trash2 } from "lucide-react";
 import {
-  subCategoryData,
   columns,
   type SubCategoryRecord,
 } from "@/lib/mock-data/attributes/sub-category.mock";
 import { useSubCategories, useSubCategoryMutations } from "@/features/attributes/hooks/use-attributes";
 
 export default function SubCategoryPage() {
-  const { data = subCategoryData, isLoading, error, refetch } = useSubCategories();
+  const { data = [], isLoading, error, refetch } = useSubCategories();
   const { deleteMut } = useSubCategoryMutations();
   return (
     <TableProvider title="Sub Categories" entityName="Sub Category" newHref="/attribute/sub-category/new">

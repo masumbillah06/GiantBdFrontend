@@ -12,7 +12,6 @@ import {
   useSubZones,
   useCreateRack,
 } from "@/features/attributes/hooks/use-attributes";
-import { subZoneData } from "@/lib/mock-data/attributes/sub-zone.mock";
 
 export default function NewRackPage() {
   const router = useRouter();
@@ -24,7 +23,7 @@ export default function NewRackPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [serverError, setServerError] = useState<string | null>(null);
 
-  const { data: subZones = subZoneData, isLoading: isSubZonesLoading } =
+  const { data: subZones = [], isLoading: isSubZonesLoading } =
     useSubZones();
   const createRackMutation = useCreateRack();
 

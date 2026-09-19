@@ -18,14 +18,13 @@ import { ActionButtonGroup } from "@/components/ui/buttons/action-button-group";
 import { ActionButton } from "@/components/ui/buttons/action-button";
 import { Eye, PenSquareIcon, Trash2 } from "lucide-react";
 import {
-  materialData,
   columns,
   type MaterialRecord,
 } from "@/lib/mock-data/attributes/material.mock";
 import { useMaterials, useMaterialMutations } from "@/features/attributes/hooks/use-attributes";
 
 export default function MaterialPage() {
-  const { data = materialData, isLoading, error, refetch } = useMaterials();
+  const { data = [], isLoading, error, refetch } = useMaterials();
   const { deleteMut } = useMaterialMutations();
   return (
     <TableProvider title="Materials" entityName="Material" newHref="/attribute/material/new">

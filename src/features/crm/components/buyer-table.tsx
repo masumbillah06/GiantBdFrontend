@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React from "react";
 import PaginatedTable from "@/components/ui/table/paginated-table";
+import { useTableContext } from "@/components/ui/table/table-context";
 import { ActionButtonGroup } from "@/components/ui/buttons/action-button-group";
 import { ActionButton } from "@/components/ui/buttons/action-button";
 import { Eye, PenSquareIcon, Trash2 } from "lucide-react";
@@ -23,24 +24,30 @@ export interface BuyerTableProps {
 }
 
 export function BuyerTable({ searchValue, pageSize, onNotify }: BuyerTableProps) {
-  const { data = [], isLoading, error, refetch } = useBuyers({ search: searchValue });
-  const { deleteMut } = useBuyerMutations();
+  const tableContext = useTableContext();
 
-  const filteredData = useMemo(() => {
-    if (!searchValue || !searchValue.trim()) return data;
-    const query = searchValue.toLowerCase();
-    return data.filter((row) =>
-      Object.values(row).some((val) =>
-        String(val ?? "").toLowerCase().includes(query)
-      )
-    );
-  }, [data, searchValue]);
+  const activeSearch =
+    searchValue !== undefined
+      ? searchValue
+      : tableContext?.searchQuery ?? "";
+
+  const activePageSize =
+    pageSize !== undefined
+      ? pageSize
+      : tableContext?.pageSize ?? 10;
+
+  const { data = [], isLoading, error, refetch } = useBuyers({
+    search: activeSearch || undefined,
+    per_page: activePageSize,
+  });
+  const { deleteMut } = useBuyerMutations();
 
   return (
     <PaginatedTable<CustomerRecord>
-      data={filteredData}
+      data={data}
       columns={buyerColumns}
-      pageSize={pageSize}
+      pageSize={activePageSize}
+      searchValue={activeSearch}
       minWidth="1200px"
       actionsLabel="Action"
       isLoading={isLoading}

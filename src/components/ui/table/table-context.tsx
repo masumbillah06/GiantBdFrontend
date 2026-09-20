@@ -74,6 +74,27 @@ export interface TableContextValue<T extends RowBase = RowBase> {
 
 const TableContext = createContext<TableContextValue | null>(null);
 
+function areArraysShallowEqual<T>(left?: T[], right?: T[]) {
+  if (left === right) return true;
+  if (!left || !right || left.length !== right.length) return false;
+
+  return left.every((item, index) => item === right[index]);
+}
+
+function areColumnsEqual<T extends RowBase>(
+  left?: ColumnDef<T>[],
+  right?: ColumnDef<T>[]
+) {
+  if (left === right) return true;
+  if (!left || !right || left.length !== right.length) return false;
+
+  return left.every(
+    (col, index) =>
+      col === right[index] ||
+      (col.key === right[index]?.key && col.label === right[index]?.label)
+  );
+}
+
 export interface TableProviderProps<T extends RowBase = RowBase> {
   children: React.ReactNode;
   initialSearchQuery?: string;
@@ -132,6 +153,7 @@ export function TableProvider<T extends RowBase = RowBase>({
   const [isReloading, setIsReloading] = useState(false);
   const [registeredTable, setRegisteredTable] =
     useState<RegisteredTableMeta<T> | null>(null);
+  const registeredTableRef = useRef<RegisteredTableMeta<T> | null>(null);
   const [actionNotice, setActionNotice] = useState<string | null>(null);
   const noticeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -206,16 +228,14 @@ export function TableProvider<T extends RowBase = RowBase>({
   );
 
   const registerTable = useCallback((meta: RegisteredTableMeta<T>) => {
+    registeredTableRef.current = meta;
     setRegisteredTable((current) => {
       if (
-        current?.data === meta.data &&
-        current?.rawData === meta.rawData &&
-        current?.columns === meta.columns &&
-        current?.selectedIds === meta.selectedIds &&
-        current?.isLoading === meta.isLoading &&
-        current?.onRetry === meta.onRetry &&
-        current?.getRowId === meta.getRowId &&
-        current?.tableRef === meta.tableRef
+        current &&
+        current.isLoading === meta.isLoading &&
+        areArraysShallowEqual(current.data, meta.data) &&
+        areArraysShallowEqual(current.rawData, meta.rawData) &&
+        areColumnsEqual(current.columns, meta.columns)
       ) {
         return current;
       }
@@ -225,23 +245,37 @@ export function TableProvider<T extends RowBase = RowBase>({
   }, []);
 
   const unregisterTable = useCallback(() => {
+    registeredTableRef.current = null;
     setRegisteredTable(null);
   }, []);
 
   // Combined data and columns (props take precedence or fall back to registered)
-  const effectiveData = propData ?? registeredTable?.data ?? [];
-  const effectiveColumns = propColumns ?? registeredTable?.columns ?? [];
-  const effectiveGetRowId = propGetRowId ?? registeredTable?.getRowId;
+  // const effectiveData =
+  //   propData ??
+  //   registeredTable?.data ??
+  //   registeredTableRef.current?.data ??
+  //   [];
+  // const effectiveColumns =
+  //   propColumns ??
+  //   registeredTable?.columns ??
+  //   registeredTableRef.current?.columns ??
+  //   [];
+  // const effectiveGetRowId =
+  //   propGetRowId ??
+  //   registeredTable?.getRowId ??
+  //   registeredTableRef.current?.getRowId;
   const effectiveIsLoading =
-    Boolean(propIsLoading) || Boolean(registeredTable?.isLoading) || isReloading;
+    Boolean(propIsLoading) ||
+    Boolean(registeredTable?.isLoading) ||
+    isReloading;
 
   const reload = useCallback(async () => {
     setIsReloading(true);
     try {
       if (onReload) {
         await onReload();
-      } else if (registeredTable?.onRetry) {
-        await registeredTable.onRetry();
+      } else if (registeredTableRef.current?.onRetry) {
+        await registeredTableRef.current.onRetry();
       }
       notify("Table data reloaded successfully");
     } catch (err) {
@@ -251,12 +285,26 @@ export function TableProvider<T extends RowBase = RowBase>({
     } finally {
       setIsReloading(false);
     }
-  }, [onReload, registeredTable, notify]);
+  }, [onReload, notify]);
 
   const exportData = useCallback(
     (customFilename?: string) => {
+      const activeData =
+        propData ??
+        registeredTableRef.current?.data ??
+        [];
+      const activeColumns =
+        propColumns ??
+        registeredTableRef.current?.columns ??
+        [];
+      const activeGetRowId =
+        propGetRowId ??
+        registeredTableRef.current?.getRowId;
+      const activeSelectedIds =
+        registeredTableRef.current?.selectedIds;
+
       if (onExport) {
-        onExport(effectiveData, effectiveColumns);
+        onExport(activeData, activeColumns);
         return;
       }
 
@@ -266,11 +314,11 @@ export function TableProvider<T extends RowBase = RowBase>({
         (title ? title.toLowerCase().replace(/\s+/g, "-") : "table-export");
 
       const count = exportToCsv({
-        data: effectiveData,
-        columns: effectiveColumns,
+        data: activeData,
+        columns: activeColumns,
         filename: effectiveFilename,
-        selectedIds: registeredTable?.selectedIds,
-        getRowId: effectiveGetRowId,
+        selectedIds: activeSelectedIds,
+        getRowId: activeGetRowId,
       });
 
       if (count > 0) {
@@ -280,18 +328,31 @@ export function TableProvider<T extends RowBase = RowBase>({
       }
     },
     [
+      propData,
+      propColumns,
+      propGetRowId,
       onExport,
       exportFilename,
       title,
-      effectiveData,
-      effectiveColumns,
-      registeredTable?.selectedIds,
-      effectiveGetRowId,
       notify,
     ]
   );
 
   const printTable = useCallback(() => {
+    const activeData =
+      propData ??
+      registeredTableRef.current?.data ??
+      [];
+    const activeColumns =
+      propColumns ??
+      registeredTableRef.current?.columns ??
+      [];
+    const activeGetRowId =
+      propGetRowId ??
+      registeredTableRef.current?.getRowId;
+    const activeSelectedIds =
+      registeredTableRef.current?.selectedIds;
+
     if (onPrint) {
       onPrint();
       return;
@@ -299,19 +360,18 @@ export function TableProvider<T extends RowBase = RowBase>({
 
     printTableData({
       title: title ?? (entityName ? `${entityName} List` : "Table Records"),
-      data: effectiveData,
-      columns: effectiveColumns,
-      selectedIds: registeredTable?.selectedIds,
-      getRowId: effectiveGetRowId,
+      data: activeData,
+      columns: activeColumns,
+      selectedIds: activeSelectedIds,
+      getRowId: activeGetRowId,
     });
   }, [
+    propData,
+    propColumns,
+    propGetRowId,
     onPrint,
     title,
     entityName,
-    effectiveData,
-    effectiveColumns,
-    registeredTable?.selectedIds,
-    effectiveGetRowId,
   ]);
 
   const value = useMemo<TableContextValue<T>>(
@@ -359,6 +419,7 @@ export function TableProvider<T extends RowBase = RowBase>({
       setPageSize,
       pageSizeOptions,
       currentPage,
+      setCurrentPage,
       reload,
       effectiveIsLoading,
       isReloading,

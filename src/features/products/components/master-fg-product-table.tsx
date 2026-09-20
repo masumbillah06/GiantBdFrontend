@@ -1,7 +1,9 @@
 "use client";
 
+import { useMemo } from "react";
 import { AlertTriangle, Check, Eye, PenSquareIcon, Trash2 } from "lucide-react";
 import PaginatedTable from "@/components/ui/table/paginated-table";
+import { useTableContext } from "@/components/ui/table/table-context";
 import { ActionButton } from "@/components/ui/buttons/action-button";
 import { ActionButtonGroup } from "@/components/ui/buttons/action-button-group";
 import type { ColumnDef } from "@/components/ui/table/ReusableTable.types";
@@ -66,16 +68,39 @@ export interface MasterFGProductTableProps {
 }
 
 export function MasterFGProductTable({ pageSize, searchValue, filters, onNotify }: MasterFGProductTableProps) {
-  const { data = [], isLoading, error, refetch } = useMasterProducts({ search: searchValue, ...filters });
+  const tableContext = useTableContext();
+
+  const activeSearch =
+    searchValue !== undefined
+      ? searchValue
+      : tableContext?.searchQuery ?? "";
+
+  const activePageSize =
+    pageSize !== undefined
+      ? pageSize
+      : tableContext?.pageSize ?? 10;
+
+  const activeFilters = useMemo(() => {
+    return {
+      ...(tableContext?.filters ?? {}),
+      ...(filters ?? {}),
+    };
+  }, [tableContext?.filters, filters]);
+
+  const { data = [], isLoading, error, refetch } = useMasterProducts({
+    search: activeSearch || undefined,
+    per_page: activePageSize,
+    ...activeFilters,
+  });
   const { deleteMut } = useMasterProductMutations();
 
   return (
     <PaginatedTable<MasterProduct>
       data={data}
       columns={masterProductColumns}
-      pageSize={pageSize}
-      searchValue={searchValue}
-      filters={filters}
+      pageSize={activePageSize}
+      searchValue={activeSearch}
+      filters={activeFilters}
       minWidth="1200px"
       actionsLabel="Action"
       isLoading={isLoading}

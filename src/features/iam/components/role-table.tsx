@@ -2,6 +2,7 @@
 
 import { Eye, PenSquareIcon, Trash2 } from "lucide-react";
 import PaginatedTable from "@/components/ui/table/paginated-table";
+import { useTableContext } from "@/components/ui/table/table-context";
 import { ActionButton } from "@/components/ui/buttons/action-button";
 import { ActionButtonGroup } from "@/components/ui/buttons/action-button-group";
 import type { ColumnDef } from "@/components/ui/table/ReusableTable.types";
@@ -20,15 +21,30 @@ export interface RoleTableProps {
 }
 
 export function RoleTable({ pageSize, searchValue, onNotify }: RoleTableProps) {
-  const { data = [], isLoading, error, refetch } = useRoles({ search: searchValue });
+  const tableContext = useTableContext();
+
+  const activeSearch =
+    searchValue !== undefined
+      ? searchValue
+      : tableContext?.searchQuery ?? "";
+
+  const activePageSize =
+    pageSize !== undefined
+      ? pageSize
+      : tableContext?.pageSize ?? 10;
+
+  const { data = [], isLoading, error, refetch } = useRoles({
+    search: activeSearch || undefined,
+    per_page: activePageSize,
+  });
   const { deleteMut } = useRoleMutations();
 
   return (
     <PaginatedTable<RoleRecord>
       data={data}
       columns={roleColumns}
-      pageSize={pageSize}
-      searchValue={searchValue}
+      pageSize={activePageSize}
+      searchValue={activeSearch}
       minWidth="1200px"
       actionsLabel="Action"
       isLoading={isLoading}

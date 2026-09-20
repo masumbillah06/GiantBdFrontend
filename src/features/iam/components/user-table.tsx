@@ -1,8 +1,10 @@
 "use client";
 
+import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, PenSquareIcon, Trash2 } from "lucide-react";
 import PaginatedTable from "@/components/ui/table/paginated-table";
+import { useTableContext } from "@/components/ui/table/table-context";
 import { ActionButton } from "@/components/ui/buttons/action-button";
 import { ActionButtonGroup } from "@/components/ui/buttons/action-button-group";
 import type { ColumnDef } from "@/components/ui/table/ReusableTable.types";
@@ -32,20 +34,39 @@ export interface UserTableProps {
 
 export function UserTable({ pageSize, searchValue, onNotify }: UserTableProps) {
   const router = useRouter();
-  const { data = [], isLoading, error, refetch } = useUsers({ search: searchValue });
+  const tableContext = useTableContext();
+
+  const activeSearch =
+    searchValue !== undefined
+      ? searchValue
+      : tableContext?.searchQuery ?? "";
+
+  const activePageSize =
+    pageSize !== undefined
+      ? pageSize
+      : tableContext?.pageSize ?? 10;
+
+  const { data = [], isLoading, error, refetch } = useUsers({
+    search: activeSearch || undefined,
+    per_page: activePageSize,
+  });
   const { deleteMut } = useUserMutations();
+
+  const handleRetry = useCallback(() => {
+    refetch();
+  }, [refetch]);
 
   return (
     <PaginatedTable<UserRecord>
       data={data}
       columns={userColumns}
-      pageSize={pageSize}
-      searchValue={searchValue}
+      pageSize={activePageSize}
+      searchValue={activeSearch}
       minWidth="1200px"
       actionsLabel="Action"
       isLoading={isLoading}
       error={error ? error.message : null}
-      onRetry={() => refetch()}
+      onRetry={handleRetry}
       renderActions={(row, notify) => (
         <ActionButtonGroup aria-label={`Actions for user ${row.id}`}>
           <ActionButton

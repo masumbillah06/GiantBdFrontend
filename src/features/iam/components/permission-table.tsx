@@ -2,6 +2,7 @@
 
 import { PenSquareIcon, Trash2 } from "lucide-react";
 import PaginatedTable from "@/components/ui/table/paginated-table";
+import { useTableContext } from "@/components/ui/table/table-context";
 import { ActionButton } from "@/components/ui/buttons/action-button";
 import { ActionButtonGroup } from "@/components/ui/buttons/action-button-group";
 import { permissionColumns } from "@/lib/mock-data/iam/permission.mock";
@@ -15,14 +16,26 @@ export interface PermissionTableProps {
 }
 
 export function PermissionTable({ pageSize, searchValue, onNotify }: PermissionTableProps) {
+  const tableContext = useTableContext();
+
+  const activeSearch =
+    searchValue !== undefined
+      ? searchValue
+      : tableContext?.searchQuery ?? "";
+
+  const activePageSize =
+    pageSize !== undefined
+      ? pageSize
+      : tableContext?.pageSize ?? 10;
+
   const { data = [], isLoading, error, refetch } = usePermissions();
 
   return (
     <PaginatedTable<PermissionRecord>
       data={data}
       columns={permissionColumns}
-      pageSize={pageSize}
-      searchValue={searchValue}
+      pageSize={activePageSize}
+      searchValue={activeSearch}
       minWidth="1650px"
       actionsLabel="Actions"
       noticeDuration={3000}

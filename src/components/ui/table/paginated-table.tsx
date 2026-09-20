@@ -234,9 +234,24 @@ export function PaginatedTable<
 
   // Reset to page 1 whenever active filters or search change
   const { setCurrentPage } = clientPagination;
+  const isFirstFilterRender = useRef(true);
+  const prevSearchRef = useRef(activeSearchQuery);
+  const prevFiltersRef = useRef(activeFilters);
+
   useEffect(() => {
-    setCurrentPage(1);
-    onFilterChange?.(activeFilters);
+    if (isFirstFilterRender.current) {
+      isFirstFilterRender.current = false;
+      return;
+    }
+    if (
+      prevSearchRef.current !== activeSearchQuery ||
+      prevFiltersRef.current !== activeFilters
+    ) {
+      prevSearchRef.current = activeSearchQuery;
+      prevFiltersRef.current = activeFilters;
+      setCurrentPage(1);
+      onFilterChange?.(activeFilters);
+    }
   }, [activeSearchQuery, activeFilters, setCurrentPage, onFilterChange]);
 
   // --- Server-Side Standalone State (used when in server mode) ---
@@ -305,30 +320,57 @@ export function PaginatedTable<
     }
   };
 
+  const onRetryRef = useRef(onRetry);
+  onRetryRef.current = onRetry;
+
+  const getRowIdRef = useRef(getRowId);
+  getRowIdRef.current = getRowId;
+
+  const handleRetry = useCallback(async () => {
+    return onRetryRef.current?.();
+  }, []);
+
+  const handleGetRowId = useCallback(
+    (row: T) => {
+      return getRowIdRef.current ? getRowIdRef.current(row) : (row as { id?: string | number }).id ?? "";
+    },
+    []
+  );
+
+  const registerTable = tableContext?.registerTable;
+  const unregisterTable = tableContext?.unregisterTable;
+
   // Register table state with TableProvider if present
   useEffect(() => {
-    if (tableContext?.registerTable) {
-      tableContext.registerTable({
+    if (registerTable) {
+      registerTable({
         data: processedData,
         rawData: data,
         columns,
         selectedIds: effectiveSelectedIds as Array<string | number>,
         isLoading,
-        onRetry,
-        getRowId: getRowId as ((row: T) => string | number) | undefined,
+        onRetry: handleRetry,
+        getRowId: handleGetRowId,
         tableRef,
       });
     }
   }, [
-    tableContext,
+    registerTable,
     processedData,
     data,
     columns,
     effectiveSelectedIds,
     isLoading,
-    onRetry,
-    getRowId,
+    handleRetry,
+    handleGetRowId,
   ]);
+
+  // Unregister table only on unmount
+  useEffect(() => {
+    return () => {
+      unregisterTable?.();
+    };
+  }, [unregisterTable]);
 
   const activeNotice =
     tableContext?.actionNotice ??

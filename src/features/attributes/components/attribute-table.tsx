@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React from "react";
 import PaginatedTable from "@/components/ui/table/paginated-table";
+import { useTableContext } from "@/components/ui/table/table-context";
 import { ActionButtonGroup } from "@/components/ui/buttons/action-button-group";
 import { ActionButton } from "@/components/ui/buttons/action-button";
 import { Eye, PenSquareIcon, Trash2 } from "lucide-react";
@@ -25,8 +26,8 @@ export function AttributeTable<T extends RowBase>({
   data,
   columns,
   entityName,
-  pageSize = 10,
-  searchValue = "",
+  pageSize,
+  searchValue,
   isLoading = false,
   error = null,
   onRetry,
@@ -34,21 +35,24 @@ export function AttributeTable<T extends RowBase>({
   onDelete,
   minWidth = "800px",
 }: AttributeTableProps<T>) {
-  const filteredData = useMemo(() => {
-    if (!searchValue.trim()) return data;
-    const query = searchValue.toLowerCase();
-    return data.filter((row) =>
-      Object.values(row).some((val) =>
-        String(val ?? "").toLowerCase().includes(query)
-      )
-    );
-  }, [data, searchValue]);
+  const tableContext = useTableContext();
+
+  const activeSearch =
+    searchValue !== undefined
+      ? searchValue
+      : tableContext?.searchQuery ?? "";
+
+  const activePageSize =
+    pageSize !== undefined
+      ? pageSize
+      : tableContext?.pageSize ?? 10;
 
   return (
     <PaginatedTable<T>
-      data={filteredData}
+      data={data}
       columns={columns}
-      pageSize={pageSize}
+      pageSize={activePageSize}
+      searchValue={activeSearch}
       minWidth={minWidth}
       actionsLabel="Action"
       isLoading={isLoading}

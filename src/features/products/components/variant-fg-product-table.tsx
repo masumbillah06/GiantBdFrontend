@@ -1,7 +1,9 @@
 "use client";
 
+import { useMemo } from "react";
 import { Eye, PenSquareIcon, Trash2 } from "lucide-react";
 import PaginatedTable from "@/components/ui/table/paginated-table";
+import { useTableContext } from "@/components/ui/table/table-context";
 import { ActionButton } from "@/components/ui/buttons/action-button";
 import { ActionButtonGroup } from "@/components/ui/buttons/action-button-group";
 import type { ColumnDef } from "@/components/ui/table/ReusableTable.types";
@@ -64,16 +66,39 @@ export interface VariantFGProductTableProps {
 }
 
 export function VariantFGProductTable({ pageSize, searchValue, filters, onNotify }: VariantFGProductTableProps) {
-  const { data = [], isLoading, error, refetch } = useVariantProducts({ search: searchValue, ...filters });
+  const tableContext = useTableContext();
+
+  const activeSearch =
+    searchValue !== undefined
+      ? searchValue
+      : tableContext?.searchQuery ?? "";
+
+  const activePageSize =
+    pageSize !== undefined
+      ? pageSize
+      : tableContext?.pageSize ?? 10;
+
+  const activeFilters = useMemo(() => {
+    return {
+      ...(tableContext?.filters ?? {}),
+      ...(filters ?? {}),
+    };
+  }, [tableContext?.filters, filters]);
+
+  const { data = [], isLoading, error, refetch } = useVariantProducts({
+    search: activeSearch || undefined,
+    per_page: activePageSize,
+    ...activeFilters,
+  });
   const { deleteMut } = useVariantMutations();
 
   return (
     <PaginatedTable<VariantProduct>
       data={data}
       columns={variantProductColumns}
-      pageSize={pageSize}
-      searchValue={searchValue}
-      filters={filters}
+      pageSize={activePageSize}
+      searchValue={activeSearch}
+      filters={activeFilters}
       minWidth="1200px"
       actionsLabel="Action"
       isLoading={isLoading}
@@ -88,7 +113,7 @@ export function VariantFGProductTable({ pageSize, searchValue, filters, onNotify
           />
           <ActionButton
             label="Edit Product"
-            icon={PenSquareIcon}
+            icon={PenSquareIcon}  
             onClick={() => (onNotify || notify)(`Editing variant #${row.id}`)}
           />
           <ActionButton

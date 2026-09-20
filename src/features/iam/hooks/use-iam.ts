@@ -8,6 +8,8 @@ import {
   getCurrentUser,
   registerUser,
   updateUser,
+  uploadUserAvatar,
+  uploadUserSignature,
   deleteUser,
   restoreUser,
   getRoles,
@@ -67,9 +69,40 @@ export function useUserMutations() {
       data,
     }: {
       id: string;
-      data: { name?: string; phone?: string; gender?: string; roleId?: string; status?: string };
+      data: {
+        name?: string;
+        email?: string;
+        phone?: string;
+        gender?: string;
+        roleId?: string;
+        status?: string;
+        password?: string;
+        isTwoFactorEnabled?: boolean;
+      };
     }) => updateUser(id, data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["iam", "users"] }),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["iam", "users"] });
+      queryClient.invalidateQueries({ queryKey: ["iam", "users", variables.id] });
+      queryClient.invalidateQueries({ queryKey: ["iam", "users", "me"] });
+    },
+  });
+
+  const uploadAvatarMut = useMutation({
+    mutationFn: ({ id, file }: { id: string; file: File }) => uploadUserAvatar(id, file),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["iam", "users"] });
+      queryClient.invalidateQueries({ queryKey: ["iam", "users", variables.id] });
+      queryClient.invalidateQueries({ queryKey: ["iam", "users", "me"] });
+    },
+  });
+
+  const uploadSignatureMut = useMutation({
+    mutationFn: ({ id, file }: { id: string; file: File }) => uploadUserSignature(id, file),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["iam", "users"] });
+      queryClient.invalidateQueries({ queryKey: ["iam", "users", variables.id] });
+      queryClient.invalidateQueries({ queryKey: ["iam", "users", "me"] });
+    },
   });
 
   const deleteMut = useMutation({
@@ -82,7 +115,7 @@ export function useUserMutations() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["iam", "users"] }),
   });
 
-  return { registerMut, updateMut, deleteMut, restoreMut };
+  return { registerMut, updateMut, uploadAvatarMut, uploadSignatureMut, deleteMut, restoreMut };
 }
 
 export function useRoles(params?: Record<string, any>) {

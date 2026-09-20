@@ -46,6 +46,7 @@ export async function updateUser(
     phone?: string;
     gender?: any;
     roleId?: string;
+    status?: string;
     password?: string;
     image?: string;
     signature?: string;
@@ -58,7 +59,8 @@ export async function updateUser(
   if (data.phone !== undefined) payload.phone = data.phone;
   if (data.gender !== undefined) payload.gender = data.gender;
   if (data.roleId !== undefined) payload.roleId = data.roleId;
-  if (data.password !== undefined) payload.password = data.password;
+  if (data.status !== undefined) payload.status = data.status;
+  if (data.password !== undefined && data.password.trim() !== '') payload.password = data.password;
   if (data.image !== undefined) payload.image = data.image;
   if (data.signature !== undefined) payload.signature = data.signature;
   if (data.isTwoFactorEnabled !== undefined) payload.isTwoFactorEnabled = data.isTwoFactorEnabled;

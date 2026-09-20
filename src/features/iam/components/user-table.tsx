@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { Eye, PenSquareIcon, Trash2 } from "lucide-react";
 import PaginatedTable from "@/components/ui/table/paginated-table";
 import { ActionButton } from "@/components/ui/buttons/action-button";
@@ -30,6 +31,7 @@ export interface UserTableProps {
 }
 
 export function UserTable({ pageSize, searchValue, onNotify }: UserTableProps) {
+  const router = useRouter();
   const { data = [], isLoading, error, refetch } = useUsers({ search: searchValue });
   const { deleteMut } = useUserMutations();
 
@@ -49,12 +51,12 @@ export function UserTable({ pageSize, searchValue, onNotify }: UserTableProps) {
           <ActionButton
             label="View User"
             icon={Eye}
-            onClick={() => (onNotify || notify)(`Viewing user #${row.id}`)}
+            onClick={() => router.push(`/user/details?id=${row.id}`)}
           />
           <ActionButton
             label="Edit User"
             icon={PenSquareIcon}
-            onClick={() => (onNotify || notify)(`Editing user #${row.id}`)}
+            onClick={() => router.push(`/user/edit?id=${row.id}`)}
           />
           <ActionButton
             label="Delete User"
